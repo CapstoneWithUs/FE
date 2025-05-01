@@ -9,8 +9,14 @@ import {
   CanvasPanel,
   FocalLengthSlider,
   StatsCards,
-  UserGuide
+  UserGuide,
+  ScoreGraph
 } from './FaceDetectionComponents';
+
+import { useBlinkCounter } from "./blinkCounter";
+import { useEarLogger } from "./earLogger";
+import { useHeadAngleVariation } from "./headAngleVariation";
+import { useHeadMovement } from "./headMovement";
 
 const LoadCV = async () => {
   if (typeof cv === "undefined") {
@@ -41,12 +47,18 @@ const FaceDetection = () => {
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
 
+  const { leftBlinkHistory, rightBlinkHistory, blinkCounter } = useBlinkCounter();
+  const { leftEarHistory, rightEarHistory, earLogger } = useEarLogger();
+  const { headAngleVariationHistory, headAngleVariation } = useHeadAngleVariation();
+  const { headMovementHistory, headMovement } = useHeadMovement();
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [faceLandmarker, setFaceLandmarker] = useState(null);
   const faceLandmarkerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [stateInfo, setStateInfo] = useState({
+    now: performance.now(),
     state: 0,
     studyTime: 0,
     sleepTime: 0,
@@ -59,6 +71,7 @@ const FaceDetection = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setStateInfo({
+        now: performance.now(),
         state: window.STATE,
         studyTime: window.studyTime || 0,
         sleepTime: window.sleepTime || 0,
@@ -128,8 +141,13 @@ const FaceDetection = () => {
       const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
       
       // ProcessFrame 함수 직접 호출
-      ProcessFrame(window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480);
-      
+      ProcessFrame(
+        window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480,
+        blinkCounter,
+        earLogger,
+        headAngleVariation,
+        headMovement,
+      );
       setTimeout(() => requestAnimationFrame(detectFaces), 100);
     };
     requestAnimationFrame(detectFaces);
@@ -166,6 +184,15 @@ const FaceDetection = () => {
       )}
       
       <UserGuide />
+      <ScoreGraph
+        leftBlinkHistory={leftBlinkHistory}
+        rightBlinkHistory={rightBlinkHistory}
+        leftEarHistory={leftEarHistory}
+        rightEarHistory={rightEarHistory}
+        headAngleVariationHistory={headAngleVariationHistory}
+        headMovementHistory={headMovementHistory}
+        now={stateInfo.now}
+        />
     </div>
   );
 };

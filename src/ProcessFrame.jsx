@@ -1,25 +1,15 @@
 import getPose from "./getPose";
+import getEAR from "./getEAR";
 
-const ORIGINAL_POINTS = [
-  [0, 66, -69],
-  [-29, 0, 0],
-  [29, 0, 0],
-  [72, -5, 10],
-  [-72, -5, 10],
-  [-34, 120, -11],
-  [34, 120, -11],
-  [0, 167, -23]
-];
-
-const LEFT_EYE = [33, 160, 158, 133, 153, 144];
-const LEFT_IRIS = [469, 470, 471, 472];
-const RIGHT_EYE = [263, 387, 385, 362, 380, 373];
-const RIGHT_IRIS = [474, 475, 476, 477];
-const PNP_IDX = [1, 133, 362, 263, 33, 61, 291, 199];
-
-const PPI = 96
-const EAR_THRESHOLD = 0.2;
-const SLEEP_THRESHOLD = 5000; // 수면 모드 진입을 위한 5초 임계값
+import { 
+  ORIGINAL_POINTS,
+  LEFT_EYE,
+  RIGHT_EYE,
+  PNP_IDX,
+  PPI,
+  EAR_THRESHOLD,
+  SLEEP_THRESHOLD,
+} from './constants';
 
 // 전역 변수는 window 객체에서 접근
 // FaceDetection.jsx에서 선언됨:
@@ -32,8 +22,13 @@ const SLEEP_THRESHOLD = 5000; // 수면 모드 진입을 위한 5초 임계값
 // window.isSleeping = false; // 수면 상태 추적 변수 추가
 
 //0: 준비 중, 1: 공부 중, 2: 자리 이탈, 3: 수면, 4: 다른 곳 응시
-
-const ProcessFrame = (cv, canvas, landmarks, focal_length, w, h) => {
+const ProcessFrame = (
+  cv, canvas, landmarks, focal_length, w, h,
+  blinkCounter,
+  earLogger,
+  headAngleVariation,
+  headMovement
+) => {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "blue";
@@ -128,10 +123,20 @@ const ProcessFrame = (cv, canvas, landmarks, focal_length, w, h) => {
   
   ctx.fillText(`${yawPitchRoll[0]},${yawPitchRoll[1]},${yawPitchRoll[2]}`, circleX - 50, circleY - 10);
   ctx.fillText(`${xyz[0]},${xyz[1]},${xyz[2]}`, circleX - 50, circleY + 10);
+  
+  let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
+  let REpts = RIGHT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
+
+  const left_ear = getEAR(LEpts, yaw, pitch);
+  const right_ear = getEAR(REpts, yaw, pitch);
 
   drawGaze(x, y, z, yaw, pitch);
-  eyeClopen(ctx, landmarks, x, y, z, yaw, pitch, w, h, deltaTime);
-  
+  eyeClopen(ctx, landmarks, yaw, pitch, w, h, currentTime);
+  blinkCounter(left_ear, right_ear);
+  earLogger(left_ear, right_ear);
+  headAngleVariation(yaw, pitch, roll);
+  headMovement(x, y, z);
+
   // 현재 시간을 이전 시간으로 업데이트
   window.prvTime = currentTime;
 };
@@ -189,19 +194,18 @@ const drawGaze = (tx, ty, tz, yaw, pitch) => {
   ctx.stroke();
 };
 
-const eyeClopen = (ctx, landmarks, tx, ty, tz, yaw, pitch, w, h, deltaTime) => {
-  let x = tx+Math.tan(yaw)*tz;
-  let y = ty+Math.tan(pitch+10/180*Math.PI)*tz;
+const eyeClopen = (ctx, landmarks, yaw, pitch, w, h, currentTime) => {
+  const deltaTime = currentTime - window.prvTime;
   
   let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
-  const left_ear = (
-    Math.hypot(LEpts[1][0]-LEpts[5][0], LEpts[1][1]-LEpts[5][1])+
-    Math.hypot(LEpts[2][0]-LEpts[4][0], LEpts[2][1]-LEpts[4][1])
-  )/Math.hypot(LEpts[0][0]-LEpts[3][0], LEpts[0][1]-LEpts[3][1])/2;
+  let REpts = RIGHT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
+  const left_ear = getEAR(LEpts, yaw, pitch);
+  const right_ear = getEAR(REpts, yaw, pitch);
 
   // 눈 감음 상태 확인
-  if (left_ear < EAR_THRESHOLD) {
+  if (left_ear < EAR_THRESHOLD && right_ear < EAR_THRESHOLD) {
     // 눈이 감겨 있을 때
+    console.log(window.eyeClosedTime, deltaTime);
     window.eyeClosedTime += deltaTime; // 눈 감은 시간 누적
     window.isEyeClosed = true;
     

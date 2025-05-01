@@ -2,6 +2,12 @@ import React from 'react';
 import { Clock, Eye, EyeOff, ActivitySquare, User, Maximize2, Camera, Cpu, Sliders, AlertTriangle } from "lucide-react";
 import { styles } from './FaceDetectionStyles';
 
+import TimeLineChart from "./TimeLineChart";
+
+import getTimeDecayAvg from "./getTimeDecayAvg";
+import getTimeDecaySum from "./getTimeDecaySum";
+import calculateFocusScore from "./calculateFocusScore";
+
 export const formatTime = (ms) => {
   const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
   const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
@@ -145,5 +151,60 @@ export const UserGuide = () => (
       <li style={styles.guideItem}>시선이 화면을 벗어나면 "다른 곳 응시" 상태로 변경됩니다.</li>
       <li style={styles.guideItem}>초점 거리를 조절하여 시선 추적의 정확도를 향상시킬 수 있습니다.</li>
     </ul>
+  </div>
+);
+
+export const ScoreGraph = ({
+  leftBlinkHistory,
+  rightBlinkHistory,
+  leftEarHistory,
+  rightEarHistory,
+  headAngleVariationHistory,
+  headMovementHistory,
+  now
+}) => (
+  <div style={{
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  }}>
+    <p>Score: {(calculateFocusScore(
+      getTimeDecaySum(leftBlinkHistory, now),
+      getTimeDecaySum(rightBlinkHistory, now),
+      getTimeDecayAvg(leftEarHistory, now),
+      getTimeDecayAvg(rightEarHistory, now),
+      getTimeDecayAvg(headAngleVariationHistory, now),
+      getTimeDecayAvg(headMovementHistory, now),
+    )*100).toFixed(2)}</p>
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <TimeLineChart data={leftBlinkHistory}></TimeLineChart>
+        <p>Weighted Avg: {getTimeDecaySum(leftBlinkHistory, now).toFixed(2)}</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <TimeLineChart data={rightBlinkHistory}></TimeLineChart>
+        <p>Weighted Avg: {getTimeDecaySum(rightBlinkHistory, now).toFixed(2)}</p>
+      </div>
+    </div>
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <TimeLineChart data={leftEarHistory}></TimeLineChart>
+        <p>Weighted Avg: {getTimeDecayAvg(leftEarHistory, now).toFixed(2)}</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <TimeLineChart data={rightEarHistory}></TimeLineChart>
+        <p>Weighted Avg: {getTimeDecayAvg(rightEarHistory, now).toFixed(2)}</p>
+      </div>
+    </div>
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <TimeLineChart data={headAngleVariationHistory}></TimeLineChart>
+        <p>Weighted Avg: {getTimeDecayAvg(headAngleVariationHistory, now).toFixed(2)}</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <TimeLineChart data={headMovementHistory}></TimeLineChart>
+        <p>Weighted Avg: {getTimeDecayAvg(headMovementHistory, now).toFixed(2)}</p>
+      </div>
+    </div>
   </div>
 );

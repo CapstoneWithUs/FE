@@ -1,0 +1,35 @@
+const ORIGINAL_POINTS = [
+  [0, 66, -69],
+  [-29, 0, 0],
+  [29, 0, 0],
+  [72, -5, 10],
+  [-72, -5, 10],
+  [-34, 120, -11],
+  [34, 120, -11],
+  [0, 167, -23]
+];
+
+const LEFT_EYE = [33, 160, 158, 133, 153, 144];
+const LEFT_IRIS = [469, 470, 471, 472];
+const RIGHT_EYE = [263, 387, 385, 362, 380, 373];
+const RIGHT_IRIS = [474, 475, 476, 477];
+const PNP_IDX = [1, 133, 362, 263, 33, 61, 291, 199];
+
+const PPI = 96
+const EAR_THRESHOLD = 0.15;
+const GRAPH_INTERVAL = 60000;
+
+const SLEEP_THRESHOLD = 5000;
+
+export {
+  ORIGINAL_POINTS,
+  LEFT_EYE,
+  LEFT_IRIS,
+  RIGHT_EYE,
+  RIGHT_IRIS,
+  PNP_IDX,
+  PPI,
+  EAR_THRESHOLD,
+  GRAPH_INTERVAL,
+  SLEEP_THRESHOLD,
+};
