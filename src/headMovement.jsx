@@ -18,7 +18,7 @@ export function useHeadMovement() {
       const distance = Math.hypot(x - prvX.current, y - prvY.current, z - prvZ.current);
       setHeadMovementHistory(prev => [
         ...prev,
-        { value: distance / (performance.now() - prvT.current), time: now }
+        { value: distance / (performance.now() - prvT.current) / 10, time: now }
       ]);
     }
 

@@ -179,31 +179,31 @@ export const ScoreGraph = ({
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={leftBlinkHistory}></TimeLineChart>
-        <p>Weighted Avg: {getTimeDecaySum(leftBlinkHistory, now).toFixed(2)}</p>
+        <p>초당 눈 깜빡임(왼쪽): {getTimeDecaySum(leftBlinkHistory, now).toFixed(2)}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={rightBlinkHistory}></TimeLineChart>
-        <p>Weighted Avg: {getTimeDecaySum(rightBlinkHistory, now).toFixed(2)}</p>
+        <p>초당 눈 깜빡임(오른쪽): {getTimeDecaySum(rightBlinkHistory, now).toFixed(2)}</p>
       </div>
     </div>
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={leftEarHistory}></TimeLineChart>
-        <p>Weighted Avg: {getTimeDecayAvg(leftEarHistory, now).toFixed(2)}</p>
+        <p>EAR (왼쪽): {getTimeDecayAvg(leftEarHistory, now).toFixed(2)}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={rightEarHistory}></TimeLineChart>
-        <p>Weighted Avg: {getTimeDecayAvg(rightEarHistory, now).toFixed(2)}</p>
+        <p>EAR (오른쪽): {getTimeDecayAvg(rightEarHistory, now).toFixed(2)}</p>
       </div>
     </div>
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={headAngleVariationHistory}></TimeLineChart>
-        <p>Weighted Avg: {getTimeDecayAvg(headAngleVariationHistory, now).toFixed(2)}</p>
+        <p>머리 각속력 (rad/ms): {getTimeDecayAvg(headAngleVariationHistory, now).toFixed(2)}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={headMovementHistory}></TimeLineChart>
-        <p>Weighted Avg: {getTimeDecayAvg(headMovementHistory, now).toFixed(2)}</p>
+        <p>머리 속력 (m/s): {getTimeDecayAvg(headMovementHistory, now).toFixed(2)}</p>
       </div>
     </div>
   </div>
