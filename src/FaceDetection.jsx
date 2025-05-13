@@ -10,8 +10,13 @@ import {
   FocalLengthSlider,
   StatsCards,
   UserGuide,
-  ScoreGraph
+  ScoreGraph,
+  EndSessionButton
 } from './FaceDetectionComponents';
+
+import calculateFocusScore from "./calculateFocusScore";
+import getTimeDecayAvg from "./getTimeDecayAvg";
+import getTimeDecaySum from "./getTimeDecaySum";
 
 import { useBlinkCounter } from "./blinkCounter";
 import { useEarLogger } from "./earLogger";
@@ -67,6 +72,57 @@ const FaceDetection = () => {
     isSleeping: false
   });
 
+  // FaceDetection.jsx - Fixed sendSessionDataToBackend function
+  const sendSessionDataToBackend = () => {
+    const now = performance.now();
+
+    // 현재 집중도 점수 계산
+    const currentFocusScore = calculateFocusScore(
+      getTimeDecaySum(leftBlinkHistory, now),
+      getTimeDecaySum(rightBlinkHistory, now),
+      getTimeDecayAvg(leftEarHistory, now),
+      getTimeDecayAvg(rightEarHistory, now),
+      getTimeDecayAvg(headAngleVariationHistory, now),
+      getTimeDecayAvg(headMovementHistory, now)
+    ) * 100;
+
+    // 백엔드로 전송할 데이터
+    const sessionData = {
+      studyTimeMs: Number(window.studyTime) || 0,
+      sleepTimeMs: Number(window.sleepTime) || 0,
+      focusScore: Number(currentFocusScore) || 0
+    };
+
+    console.log('전송할 세션 데이터:', sessionData);
+
+    // 백엔드 API 호출 - 수정된 부분
+    fetch('http://localhost:8080/session/set-study-info', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(sessionData),
+      credentials: 'include'
+    })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => {
+            console.error(`HTTP 오류! 상태: ${response.status}, 응답: ${text}`);
+            throw new Error(`HTTP 오류! 상태: ${response.status}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('세션 데이터 전송 성공:', data);
+        alert("세션 데이터가 성공적으로 저장되었습니다!");
+      })
+      .catch(error => {
+        console.error('세션 데이터 전송 실패:', error);
+        alert("세션 데이터 전송에 실패했습니다. 개발자 도구에서 자세한 오류를 확인하세요.");
+      });
+  };
+
   // 타이머 설정 - UI 업데이트용 (100ms마다 업데이트)
   useEffect(() => {
     const timer = setInterval(() => {
@@ -80,7 +136,7 @@ const FaceDetection = () => {
         isSleeping: window.isSleeping || false
       });
     }, 100);
-    
+
     return () => clearInterval(timer);
   }, []);
 
@@ -139,7 +195,7 @@ const FaceDetection = () => {
         return;
       }
       const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
-      
+
       // ProcessFrame 함수 직접 호출
       ProcessFrame(
         window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480,
@@ -156,34 +212,36 @@ const FaceDetection = () => {
   return (
     <div style={styles.container}>
       <style>{styles.globalCss}</style>
-      
+
       <Header />
-      
+
       {loading ? (
         <LoadingScreen />
       ) : (
         <div style={styles.mainContent}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <VideoPanel 
-              videoRef={videoRef} 
-              studyTime={stateInfo.studyTime} 
+            <VideoPanel
+              videoRef={videoRef}
+              studyTime={stateInfo.studyTime}
               state={stateInfo.state} // 상태 정보 전달
             />
             <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
           </div>
-          
+
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <CanvasPanel 
-              canvasRef={canvasRef} 
-              state={stateInfo.state} 
-              studyTime={stateInfo.studyTime} 
+            <CanvasPanel
+              canvasRef={canvasRef}
+              state={stateInfo.state}
+              studyTime={stateInfo.studyTime}
             />
             <StatsCards studyTime={stateInfo.studyTime} sleepTime={stateInfo.sleepTime} />
           </div>
         </div>
       )}
-      
+
       <UserGuide />
+      {/* 세션 종료 버튼 */}
+      <EndSessionButton onEndSession={sendSessionDataToBackend} />
       <ScoreGraph
         leftBlinkHistory={leftBlinkHistory}
         rightBlinkHistory={rightBlinkHistory}
@@ -192,7 +250,7 @@ const FaceDetection = () => {
         headAngleVariationHistory={headAngleVariationHistory}
         headMovementHistory={headMovementHistory}
         now={stateInfo.now}
-        />
+      />
     </div>
   );
 };
