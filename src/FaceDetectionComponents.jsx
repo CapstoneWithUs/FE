@@ -8,6 +8,26 @@ import getTimeDecayAvg from "./getTimeDecayAvg";
 import getTimeDecaySum from "./getTimeDecaySum";
 import calculateFocusScore from "./calculateFocusScore";
 
+export const EndSessionButton = ({ onEndSession }) => (
+  <button 
+    onClick={onEndSession}
+    style={{
+      background: "#ef4444",
+      color: "white",
+      padding: "0.75rem 1.5rem",
+      borderRadius: "0.5rem",
+      fontWeight: "bold",
+      border: "none",
+      cursor: "pointer",
+      marginTop: "1rem",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+    }}
+  >
+    <Clock size={18} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
+    세션 종료 및 저장
+  </button>
+);
+
 export const formatTime = (ms) => {
   const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
   const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
