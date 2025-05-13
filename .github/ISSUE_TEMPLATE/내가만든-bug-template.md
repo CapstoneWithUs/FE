@@ -1,6 +1,6 @@
 ---
-name: 내가만든 bug template
-about: bug 라벨 이유 생성시 사용해주세요:)
+name: 내가만든 Bug Template
+about: Bug 라벨 이유 생성시 사용해주세요:)
 title: "[Bug/이슈번호] 이슈이름"
 labels: ''
 assignees: ''

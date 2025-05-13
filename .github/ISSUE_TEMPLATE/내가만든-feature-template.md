@@ -1,7 +1,7 @@
 ---
-name: 내가만든 feature template
-about: feature 라벨 이슈 생성시 사용해주세요:)
-title: "[feature/이슈번호] 이슈이름"
+name: 내가만든 Feature Template
+about: Feature 라벨 이슈 생성시 사용해주세요:)
+title: "[Feature/이슈번호] 이슈이름"
 labels: ''
 assignees: angello0510, bamyangang22, ces0135-hub
 
