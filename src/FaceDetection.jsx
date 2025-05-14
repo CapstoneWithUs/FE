@@ -72,7 +72,6 @@ const FaceDetection = () => {
     isSleeping: false
   });
 
-  // FaceDetection.jsx - Fixed sendSessionDataToBackend function
   const sendSessionDataToBackend = () => {
     const now = performance.now();
 
@@ -86,16 +85,46 @@ const FaceDetection = () => {
       getTimeDecayAvg(headMovementHistory, now)
     ) * 100;
 
-    // 백엔드로 전송할 데이터
+    // scoreHistory를 구성 (최근 focusScore 기록들을 시간별로 구성)
+    const focusScoreHistory = [];
+
+    const maxLength = Math.max(
+      leftBlinkHistory.length,
+      rightBlinkHistory.length,
+      leftEarHistory.length,
+      rightEarHistory.length,
+      headAngleVariationHistory.length,
+      headMovementHistory.length
+    );
+
+    for (let i = 0; i < maxLength; i++) {
+      const timestamp = Date.now() - (now - (leftBlinkHistory[i]?.time || now));
+
+      const score = calculateFocusScore(
+        leftBlinkHistory[i]?.value || 0,
+        rightBlinkHistory[i]?.value || 0,
+        leftEarHistory[i]?.value || 0,
+        rightEarHistory[i]?.value || 0,
+        headAngleVariationHistory[i]?.value || 0,
+        headMovementHistory[i]?.value || 0
+      ) * 100;
+
+      focusScoreHistory.push({
+        time: Math.floor(timestamp),
+        score: parseFloat(score.toFixed(2))
+      });
+    }
+
+    // 최종 전송 데이터
     const sessionData = {
       studyTimeMs: Number(window.studyTime) || 0,
       sleepTimeMs: Number(window.sleepTime) || 0,
-      focusScore: Number(currentFocusScore) || 0
+      focusScore: Number(currentFocusScore.toFixed(2)) || 0,
+      focusScoreHistory
     };
 
     console.log('전송할 세션 데이터:', sessionData);
 
-    // 백엔드 API 호출 - 수정된 부분
     fetch('http://localhost:8080/session/set-study-info', {
       method: 'POST',
       headers: {
@@ -122,6 +151,7 @@ const FaceDetection = () => {
         alert("세션 데이터 전송에 실패했습니다. 개발자 도구에서 자세한 오류를 확인하세요.");
       });
   };
+
 
   // 타이머 설정 - UI 업데이트용 (100ms마다 업데이트)
   useEffect(() => {
