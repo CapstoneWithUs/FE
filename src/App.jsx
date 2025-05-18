@@ -21,12 +21,10 @@ function App() {
       <Route path="/focus" element={<FocusTrackerPage />} />
       <Route path="/stats" element={<StatsPage />} />
       <Route path="/ranking" element={<RankingPage />} />
+      <Route path="/debugging" element={<FaceDetection />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
     </BrowserRouter>
-    /*<div className="App">
-    <FaceDetection></FaceDetection>
-  </div>*/
   );
 }
 
