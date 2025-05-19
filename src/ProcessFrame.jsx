@@ -43,16 +43,6 @@ const ProcessFrame = (
     window.studyTime += deltaTime;
   }
   
-  // 빨간색 큰 시간 표시
-  ctx.fillStyle = "red";
-  ctx.font = "30px Verdana";
-  const hh = (Math.floor(window.studyTime/3600000)).toString().padStart(2, '0');
-  const mm = (Math.floor(window.studyTime/60000)%60).toString().padStart(2, '0');
-  const ss = (Math.floor(window.studyTime/1000)%60).toString().padStart(2, '0');
-  
-  // 오른쪽 화면에서 중앙에 빨간색으로 큰 시간을 표시
-  ctx.fillText(`${hh}:${mm}:${ss}`, canvas.width/2 - 75, 40);
-
   // 얼굴이 감지되지 않으면 "자리 이탈" 상태로 변경
   if (landmarks.length == 0) {
     window.STATE = 2;
@@ -102,27 +92,16 @@ const ProcessFrame = (
   let coordination = PNP_IDX.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
   let [pitch, yaw, roll, x, y, z] = getPose(cv, ORIGINAL_POINTS, coordination, focal_length, w, h);
   
-  // 측정 데이터를 원 안에 표시 (빨간색 원)
-  const circleX = 100;
-  const circleY = 100;
-  const circleRadius = 70;
-  
-  // 빨간색 원 그리기
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(circleX, circleY, circleRadius, 0, 2 * Math.PI);
-  ctx.stroke();
-  
   // 원 안에 데이터 표시
   ctx.font = "16px Verdana";
   ctx.fillStyle = "red";
   
-  const yawPitchRoll = [yaw, pitch, roll].map(x => Math.round(x*180/Math.PI));
+  const [Yaw, Pitch, Roll] = [yaw, pitch, roll].map(x => Math.round(x*180/Math.PI));
   const xyz = [x, y, z].map(x => Math.round(x));
   
-  ctx.fillText(`${yawPitchRoll[0]},${yawPitchRoll[1]},${yawPitchRoll[2]}`, circleX - 50, circleY - 10);
-  ctx.fillText(`${xyz[0]},${xyz[1]},${xyz[2]}`, circleX - 50, circleY + 10);
+  ctx.textAlign = 'start';
+  ctx.fillText(`Angle(deg): ${Yaw},${Pitch},${Roll}`, 10, 20);
+  ctx.fillText(`Position(mm): ${xyz[0]},${xyz[1]},${xyz[2]}`, 10, 40);
   
   let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
   let REpts = RIGHT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
@@ -134,7 +113,7 @@ const ProcessFrame = (
   eyeClopen(ctx, landmarks, yaw, pitch, w, h, currentTime);
   blinkCounter(left_ear, right_ear);
   earLogger(left_ear, right_ear);
-  headAngleVariation(yaw, pitch, roll);
+  headAngleVariation(Yaw, Pitch, Roll);
   headMovement(x, y, z);
 
   // 현재 시간을 이전 시간으로 업데이트
@@ -205,16 +184,8 @@ const eyeClopen = (ctx, landmarks, yaw, pitch, w, h, currentTime) => {
   // 눈 감음 상태 확인
   if (left_ear < EAR_THRESHOLD && right_ear < EAR_THRESHOLD) {
     // 눈이 감겨 있을 때
-    console.log(window.eyeClosedTime, deltaTime);
     window.eyeClosedTime += deltaTime; // 눈 감은 시간 누적
     window.isEyeClosed = true;
-    
-    // 초록색으로 눈 감은 시간 표시 (5초까지)
-    ctx.font = "30px Verdana";
-    ctx.fillStyle = "#00FF00";
-    const totalSeconds = Math.min(Math.floor(window.eyeClosedTime / 1000), 5);
-    const milliseconds = Math.floor((window.eyeClosedTime % 1000) / 10).toString().padStart(2, '0');
-    ctx.fillText(`0${totalSeconds}:${milliseconds}`, 240, 70);
     
     // 5초 이상 눈을 감고 있으면 수면 모드로 전환
     if (window.eyeClosedTime >= SLEEP_THRESHOLD && !window.isSleeping) {
