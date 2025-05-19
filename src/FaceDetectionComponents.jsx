@@ -189,6 +189,7 @@ export const ScoreGraph = ({
     alignItems: "center",
   }}>
     <p>Score: {(calculateFocusScore(
+      window.STATE,
       getTimeDecaySum(leftBlinkHistory, now),
       getTimeDecaySum(rightBlinkHistory, now),
       getTimeDecayAvg(leftEarHistory, now),
@@ -219,7 +220,7 @@ export const ScoreGraph = ({
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={headAngleVariationHistory}></TimeLineChart>
-        <p>머리 각속력 (rad/ms): {getTimeDecayAvg(headAngleVariationHistory, now).toFixed(2)}</p>
+        <p>머리 각속력 (deg/ms): {getTimeDecayAvg(headAngleVariationHistory, now).toFixed(2)}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={headMovementHistory}></TimeLineChart>

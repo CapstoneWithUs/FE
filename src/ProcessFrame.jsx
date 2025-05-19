@@ -118,10 +118,10 @@ const ProcessFrame = (
   ctx.font = "16px Verdana";
   ctx.fillStyle = "red";
   
-  const yawPitchRoll = [yaw, pitch, roll].map(x => Math.round(x*180/Math.PI));
+  const [Yaw, Pitch, Roll] = [yaw, pitch, roll].map(x => Math.round(x*180/Math.PI));
   const xyz = [x, y, z].map(x => Math.round(x));
   
-  ctx.fillText(`${yawPitchRoll[0]},${yawPitchRoll[1]},${yawPitchRoll[2]}`, circleX - 50, circleY - 10);
+  ctx.fillText(`${Yaw},${Pitch},${Roll}`, circleX - 50, circleY - 10);
   ctx.fillText(`${xyz[0]},${xyz[1]},${xyz[2]}`, circleX - 50, circleY + 10);
   
   let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
@@ -134,7 +134,7 @@ const ProcessFrame = (
   eyeClopen(ctx, landmarks, yaw, pitch, w, h, currentTime);
   blinkCounter(left_ear, right_ear);
   earLogger(left_ear, right_ear);
-  headAngleVariation(yaw, pitch, roll);
+  headAngleVariation(Yaw, Pitch, Roll);
   headMovement(x, y, z);
 
   // 현재 시간을 이전 시간으로 업데이트
@@ -205,7 +205,6 @@ const eyeClopen = (ctx, landmarks, yaw, pitch, w, h, currentTime) => {
   // 눈 감음 상태 확인
   if (left_ear < EAR_THRESHOLD && right_ear < EAR_THRESHOLD) {
     // 눈이 감겨 있을 때
-    console.log(window.eyeClosedTime, deltaTime);
     window.eyeClosedTime += deltaTime; // 눈 감은 시간 누적
     window.isEyeClosed = true;
     
