@@ -48,7 +48,7 @@ window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수
 window.isSleeping = false; // 수면 상태 추적 변수
 
 const FaceDetection = () => {
-  const [focalLength, setFocalLength] = useState(480);
+  const [focalLength, setFocalLength] = useState(380);
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
 
