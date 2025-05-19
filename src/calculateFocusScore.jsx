@@ -5,7 +5,7 @@ const blinkScore = (blink) => {
 
 const headAngleScore = (head_angle_var) => {
   if (head_angle_var <= 0.14) return 1;
-  return Math.pow(1/2, (head_angle_var-0.14)/(0.38-0.14));
+  return Math.pow(1/2, (head_angle_var-0.14)/(0.8-0.14));
 };
 
 const headMoveScore = (head_move) => {
