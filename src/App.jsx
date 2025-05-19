@@ -9,21 +9,31 @@ import NotFoundPage from './pages/NotFoundPage';
 import RankingPage from './pages/RankingPage';
 import SignupPage from './pages/SignupPage';
 import StatsPage from './pages/StatsPage';
+import SettingPage from './pages/SettingPage';
+import AddSubjectPage from './pages/AddSubjectPage';
+import Header from './components/Header';
+import Navbar from './components/Navbar';
 
 function App() {
   return (
     <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/landing" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/focus" element={<FocusTrackerPage />} />
-      <Route path="/stats" element={<StatsPage />} />
-      <Route path="/ranking" element={<RankingPage />} />
-      <Route path="/debugging" element={<FaceDetection />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+      <Header />
+      <div className="flex-1 pt-24 pb-20 bg-gray-100 min-h-screen">
+        <Routes>
+          <Route path="/HomePage" element={<HomePage />} />
+          <Route path="/landingPage" element={<LandingPage />} />
+          <Route path="/loginPage" element={<LoginPage />} />
+          <Route path="/signupPage" element={<SignupPage />} />
+          <Route path="/focusTrackerPage" element={<FocusTrackerPage />} />
+          <Route path="/statsPage" element={<StatsPage />} />
+          <Route path="/rankingPage" element={<RankingPage />} />
+          <Route path="/settingPage" element={<SettingPage />} />
+          <Route path="/debugging" element={<FaceDetection />} />
+          <Route path="/add-subject" element={<AddSubjectPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </div>
+      <Navbar />
     </BrowserRouter>
   );
 }
