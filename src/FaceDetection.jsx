@@ -48,7 +48,7 @@ window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수
 window.isSleeping = false; // 수면 상태 추적 변수
 
 const FaceDetection = () => {
-  const [focalLength, setFocalLength] = useState(300);
+  const [focalLength, setFocalLength] = useState(480);
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
 
@@ -183,6 +183,8 @@ const FaceDetection = () => {
               modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
               delegate: "GPU"
             },
+            minFaceDetectionConfidence: 0.7,
+            minFacePresenceConfidence: 0.7,
             outputFaceBlendshapes: false,
             runningMode: "VIDEO",
             numFaces: 1
