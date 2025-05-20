@@ -75,15 +75,17 @@ const FaceDetection = () => {
   const sendSessionDataToBackend = () => {
     // 최종 전송 데이터
     const sessionData = {
-      start_time: Number(window.startTime) || 0,
-      end_time: Number(performance.now()),
-      gradeatime: Number(window.accTime[0]) || 0,
-      gradebtime: Number(window.accTime[1]) || 0,
-      gradectime: Number(window.accTime[2]) || 0,
-      gradedtime: Number(window.accTime[3]) || 0,
-      absence_time: Number(window.accTime[4]) || 0,
-      sleep_time: Number(window.accTime[5]) || 0,
-      gaze_away_time: Number(window.accTime[6]) || 0,
+      startTime: Number(window.startTime) || 0,
+      endTime: Number(performance.now()),
+      gradeATime: Number(window.accTime[0]) || 0,
+      gradeBTime: Number(window.accTime[1]) || 0,
+      gradeCTime: Number(window.accTime[2]) || 0,
+      gradeDTime: Number(window.accTime[3]) || 0,
+      absenceTime: Number(window.accTime[4]) || 0,
+      sleepTime: Number(window.accTime[5]) || 0,
+      gazeAwayTime: Number(window.accTime[6]) || 0,
+      focusScore: 0, //TODO
+      subjectName: "blahblah", //TODO
     };
 
     console.log('전송할 세션 데이터:', sessionData);
