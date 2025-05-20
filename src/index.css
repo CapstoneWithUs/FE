@@ -8,7 +8,7 @@
 
 @layer base {
   html {
-    font-family: 'Pretendard', system-ui, sans-serif;
+    /* font-family: 'Pretendard', system-ui, sans-serif; */
   }
   
   body {
@@ -41,9 +41,9 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  /* 다크 모드 */
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #242424; 
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -80,7 +80,7 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #1a1a1a; 
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -92,6 +92,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* 라이트 모드 */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

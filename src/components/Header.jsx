@@ -13,7 +13,7 @@ function Header() {
   return (
     <header className="relative w-full h-16 md:h-20 bg-gray-100 shadow-sm flex items-center px-4 md:px-8 mb-6">
       {/* 앱 이름: 좌측 상단 */}
-      <h1>
+      <h1 className="font-pretendard">
         FocusMate
       </h1>
       {/* 날짜: 중앙 */}

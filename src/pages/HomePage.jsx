@@ -34,7 +34,7 @@ const HomePage = () => {
   return (
     <div className="flex flex-col items-center w-full min-h-screen bg-black text-white">
       <button
-        className="mt-8 bg-cyan-600 px-4 py-2 rounded font-bold hover:bg-cyan-700 transition"
+        className="mt-8 bg-gray-100 px-4 py-2 rounded font-bold hover:bg-gray-700 transition"
         onClick={() => navigate('/add-subject')}
       >
         과목 추가
@@ -43,7 +43,7 @@ const HomePage = () => {
         {subjects.map(subject => (
           <button
             key={subject}
-            className="w-full bg-gray-800 rounded px-4 py-3 text-lg font-semibold text-left hover:bg-cyan-700 transition"
+            className="w-full bg-gray-500 rounded px-4 py-3 text-lg font-semibold text-left hover:bg-cyan-700 transition"
             onClick={() => handleSubjectClick(subject)}
           >
             {subject}
