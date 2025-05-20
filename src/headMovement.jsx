@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GRAPH_INTERVAL } from './constants';
 
 export function useHeadMovement() {
   const [headMovementHistory, setHeadMovementHistory] = useState([]);
+  const headMovementHistoryRef = useRef([]);
+  useEffect(() => { headMovementHistoryRef.current = headMovementHistory; }, [headMovementHistory]);
   
   const prvX = useRef(0);
   const prvY = useRef(0);
@@ -32,6 +34,7 @@ export function useHeadMovement() {
 
   return {
     headMovementHistory,
+    headMovementHistoryRef,
     headMovement,
   };
 }

@@ -10,12 +10,12 @@ import {
   EAR_THRESHOLD,
   SLEEP_THRESHOLD,
 } from './constants';
+import { accumulateTime } from "./accumulateTime";
 
 // 전역 변수는 window 객체에서 접근
 // FaceDetection.jsx에서 선언됨:
 // window.prvTime = performance.now();
-// window.studyTime = 0;
-// window.sleepTime = 0;
+// window.accTime = [ A, B, C, D, absence, sleep, gaze_away ];
 // window.STATE = 0;
 // window.isEyeClosed = false; // 눈 감은 상태 추적 변수 추가
 // window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수 추가
@@ -27,7 +27,8 @@ const ProcessFrame = (
   blinkCounter,
   earLogger,
   headAngleVariation,
-  headMovement
+  headMovement,
+  score,
 ) => {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -36,11 +37,10 @@ const ProcessFrame = (
   
   // 현재 시간 가져오기
   const currentTime = performance.now();
-  const deltaTime = currentTime - window.prvTime;
   
   // 공부 중일 때만 시간 증가
-  if (window.STATE == 1) {
-    window.studyTime += deltaTime;
+  if (window.STATE != 0) {
+    accumulateTime(window.prvTime, currentTime, window.accTime, window.STATE, score);
   }
   
   // 얼굴이 감지되지 않으면 "자리 이탈" 상태로 변경
@@ -175,7 +175,7 @@ const drawGaze = (tx, ty, tz, yaw, pitch) => {
 
 const eyeClopen = (ctx, landmarks, yaw, pitch, w, h, currentTime) => {
   const deltaTime = currentTime - window.prvTime;
-  
+
   let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
   let REpts = RIGHT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
   const left_ear = getEAR(LEpts, yaw, pitch);
@@ -191,11 +191,6 @@ const eyeClopen = (ctx, landmarks, yaw, pitch, w, h, currentTime) => {
     if (window.eyeClosedTime >= SLEEP_THRESHOLD && !window.isSleeping) {
       window.STATE = 3; // 수면 상태로 변경
       window.isSleeping = true; // 수면 상태 설정
-    }
-    
-    // 수면 상태일 때만 수면 시간 증가
-    if (window.isSleeping) {
-      window.sleepTime += deltaTime;
     }
   } 
   else {

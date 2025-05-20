@@ -40,8 +40,8 @@ const LoadCV = async () => {
 
 // 이 window 객체에 전역 변수 선언
 window.prvTime = performance.now();
-window.studyTime = 0;
-window.sleepTime = 0;
+window.startTime = performance.now(); // 공부 측정 시작 시간
+window.accTime = [ 0, 0, 0, 0, 0, 0, 0 ]; // [A, B, C, D, absence, sleep, gaze_away]
 window.STATE = 0;
 window.isEyeClosed = false; // 눈 감은 상태 추적 변수
 window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수
@@ -52,10 +52,10 @@ const FaceDetection = () => {
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
 
-  const { leftBlinkHistory, rightBlinkHistory, blinkCounter } = useBlinkCounter();
-  const { leftEarHistory, rightEarHistory, earLogger } = useEarLogger();
-  const { headAngleVariationHistory, headAngleVariation } = useHeadAngleVariation();
-  const { headMovementHistory, headMovement } = useHeadMovement();
+  const { leftBlinkHistory, leftBlinkHistoryRef, rightBlinkHistory, rightBlinkHistoryRef, blinkCounter } = useBlinkCounter();
+  const { leftEarHistory, leftEarHistoryRef, rightEarHistory, rightEarHistoryRef, earLogger } = useEarLogger();
+  const { headAngleVariationHistory, headAngleVariationHistoryRef, headAngleVariation } = useHeadAngleVariation();
+  const { headMovementHistory, headMovementHistoryRef, headMovement } = useHeadMovement();
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -65,62 +65,25 @@ const FaceDetection = () => {
   const [stateInfo, setStateInfo] = useState({
     now: performance.now(),
     state: 0,
-    studyTime: 0,
-    sleepTime: 0,
+    startTime: performance.now(),
+    accTime: [ 0, 0, 0, 0, 0, 0, 0 ],
     isEyeClosed: false,
     eyeClosedTime: 0,
     isSleeping: false
   });
 
   const sendSessionDataToBackend = () => {
-    const now = performance.now();
-
-    // 현재 집중도 점수 계산
-    const currentFocusScore = calculateFocusScore(
-      getTimeDecaySum(leftBlinkHistory, now),
-      getTimeDecaySum(rightBlinkHistory, now),
-      getTimeDecayAvg(leftEarHistory, now),
-      getTimeDecayAvg(rightEarHistory, now),
-      getTimeDecayAvg(headAngleVariationHistory, now),
-      getTimeDecayAvg(headMovementHistory, now)
-    ) * 100;
-
-    // scoreHistory를 구성 (최근 focusScore 기록들을 시간별로 구성)
-    const focusScoreHistory = [];
-
-    const maxLength = Math.max(
-      leftBlinkHistory.length,
-      rightBlinkHistory.length,
-      leftEarHistory.length,
-      rightEarHistory.length,
-      headAngleVariationHistory.length,
-      headMovementHistory.length
-    );
-
-    for (let i = 0; i < maxLength; i++) {
-      const timestamp = Date.now() - (now - (leftBlinkHistory[i]?.time || now));
-
-      const score = calculateFocusScore(
-        leftBlinkHistory[i]?.value || 0,
-        rightBlinkHistory[i]?.value || 0,
-        leftEarHistory[i]?.value || 0,
-        rightEarHistory[i]?.value || 0,
-        headAngleVariationHistory[i]?.value || 0,
-        headMovementHistory[i]?.value || 0
-      ) * 100;
-
-      focusScoreHistory.push({
-        time: Math.floor(timestamp),
-        score: parseFloat(score.toFixed(2))
-      });
-    }
-
     // 최종 전송 데이터
     const sessionData = {
-      studyTimeMs: Number(window.studyTime) || 0,
-      sleepTimeMs: Number(window.sleepTime) || 0,
-      focusScore: Number(currentFocusScore.toFixed(2)) || 0,
-      focusScoreHistory
+      start_time: Number(window.startTime) || 0,
+      end_time: Number(performance.now()),
+      gradeatime: Number(window.accTime[0]) || 0,
+      gradebtime: Number(window.accTime[1]) || 0,
+      gradectime: Number(window.accTime[2]) || 0,
+      gradedtime: Number(window.accTime[3]) || 0,
+      absence_time: Number(window.accTime[4]) || 0,
+      sleep_time: Number(window.accTime[5]) || 0,
+      gaze_away_time: Number(window.accTime[6]) || 0,
     };
 
     console.log('전송할 세션 데이터:', sessionData);
@@ -159,8 +122,8 @@ const FaceDetection = () => {
       setStateInfo({
         now: performance.now(),
         state: window.STATE,
-        studyTime: window.studyTime || 0,
-        sleepTime: window.sleepTime || 0,
+        startTime: window.startTime || performance.now(),
+        accTime: window.accTime || [ 0, 0, 0, 0, 0, 0, 0 ],
         isEyeClosed: window.isEyeClosed || false,
         eyeClosedTime: window.eyeClosedTime || 0,
         isSleeping: window.isSleeping || false
@@ -228,6 +191,18 @@ const FaceDetection = () => {
       }
       const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
 
+      
+      const now = performance.now();
+      const score = calculateFocusScore(
+        window.STATE,
+        getTimeDecaySum(leftBlinkHistoryRef.current, now),
+        getTimeDecaySum(rightBlinkHistoryRef.current, now),
+        getTimeDecayAvg(leftEarHistoryRef.current, now),
+        getTimeDecayAvg(rightEarHistoryRef.current, now),
+        getTimeDecayAvg(headAngleVariationHistoryRef.current, now),
+        getTimeDecayAvg(headMovementHistoryRef.current, now)
+      ) * 100;
+
       // ProcessFrame 함수 직접 호출
       ProcessFrame(
         window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480,
@@ -235,6 +210,7 @@ const FaceDetection = () => {
         earLogger,
         headAngleVariation,
         headMovement,
+        score,
       );
       setTimeout(() => requestAnimationFrame(detectFaces), 100);
     };
@@ -254,7 +230,7 @@ const FaceDetection = () => {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <VideoPanel
               videoRef={videoRef}
-              studyTime={stateInfo.studyTime}
+              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc+cur, 0)}
               state={stateInfo.state} // 상태 정보 전달
             />
             <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
@@ -264,9 +240,9 @@ const FaceDetection = () => {
             <CanvasPanel
               canvasRef={canvasRef}
               state={stateInfo.state}
-              studyTime={stateInfo.studyTime}
+              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc+cur, 0)}
             />
-            <StatsCards studyTime={stateInfo.studyTime} sleepTime={stateInfo.sleepTime} />
+            <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc+cur, 0)} sleepTime={stateInfo.accTime[5]} />
           </div>
         </div>
       )}

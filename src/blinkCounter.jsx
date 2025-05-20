@@ -5,6 +5,11 @@ export function useBlinkCounter() {
   const [leftBlinkHistory, setLeftBlinkHistory] = useState([]);
   const [rightBlinkHistory, setRightBlinkHistory] = useState([]);
 
+  const leftBlinkHistoryRef = useRef([]);
+  useEffect(() => { leftBlinkHistoryRef.current = leftBlinkHistory; }, [leftBlinkHistory]);
+  const rightBlinkHistoryRef = useRef([]);
+  useEffect(() => { rightBlinkHistoryRef.current = rightBlinkHistory; }, [rightBlinkHistory]);
+
   const prvLeftEar = useRef(0);
   const prvRightEar = useRef(0);
 
@@ -32,7 +37,9 @@ export function useBlinkCounter() {
   
   return {
     leftBlinkHistory,
+    leftBlinkHistoryRef,
     rightBlinkHistory,
+    rightBlinkHistoryRef,
     blinkCounter,
   };
 }

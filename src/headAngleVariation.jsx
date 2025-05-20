@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GRAPH_INTERVAL } from './constants';
 
 export function useHeadAngleVariation() {
   const [headAngleVariationHistory, setHeadAngleVariationHistory] = useState([]);
+  const headAngleVariationHistoryRef = useRef([]);
+  useEffect(() => { headAngleVariationHistoryRef.current = headAngleVariationHistory; }, [headAngleVariationHistory]);
   
   const prvYaw = useRef(0);
   const prvPitch = useRef(0);
@@ -32,6 +34,7 @@ export function useHeadAngleVariation() {
 
   return {
     headAngleVariationHistory,
+    headAngleVariationHistoryRef,
     headAngleVariation,
   };
 }
