@@ -31,6 +31,7 @@ export default {
       fontFamily: {
         sans: ['Pretendard', 'sans-serif'],
         display: ['Space Grotesk', 'sans-serif'],
+        pretendard: ['Pretendard', 'sans-serif'],
       },
     },
   },
