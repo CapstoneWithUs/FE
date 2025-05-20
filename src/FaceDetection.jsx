@@ -22,6 +22,7 @@ import { useBlinkCounter } from "./blinkCounter";
 import { useEarLogger } from "./earLogger";
 import { useHeadAngleVariation } from "./headAngleVariation";
 import { useHeadMovement } from "./headMovement";
+import { useScoreLogger } from "./useScoreLogger";
 
 const LoadCV = async () => {
   if (typeof cv === "undefined") {
@@ -40,7 +41,7 @@ const LoadCV = async () => {
 
 // 이 window 객체에 전역 변수 선언
 window.prvTime = performance.now();
-window.startTime = performance.now(); // 공부 측정 시작 시간
+window.startTime = Date.now(); // 공부 측정 시작 시간
 window.accTime = [ 0, 0, 0, 0, 0, 0, 0 ]; // [A, B, C, D, absence, sleep, gaze_away]
 window.STATE = 0;
 window.isEyeClosed = false; // 눈 감은 상태 추적 변수
@@ -56,6 +57,7 @@ const FaceDetection = () => {
   const { leftEarHistory, leftEarHistoryRef, rightEarHistory, rightEarHistoryRef, earLogger } = useEarLogger();
   const { headAngleVariationHistory, headAngleVariationHistoryRef, headAngleVariation } = useHeadAngleVariation();
   const { headMovementHistory, headMovementHistoryRef, headMovement } = useHeadMovement();
+  const { scoreLog, scoreLogger } = useScoreLogger(Date.now());
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -65,7 +67,7 @@ const FaceDetection = () => {
   const [stateInfo, setStateInfo] = useState({
     now: performance.now(),
     state: 0,
-    startTime: performance.now(),
+    startTime: Date.now(),
     accTime: [ 0, 0, 0, 0, 0, 0, 0 ],
     isEyeClosed: false,
     eyeClosedTime: 0,
@@ -76,7 +78,7 @@ const FaceDetection = () => {
     // 최종 전송 데이터
     const sessionData = {
       startTime: Number(window.startTime) || 0,
-      endTime: Number(performance.now()),
+      endTime: Number(Date.now()),
       gradeATime: Number(window.accTime[0]) || 0,
       gradeBTime: Number(window.accTime[1]) || 0,
       gradeCTime: Number(window.accTime[2]) || 0,
@@ -89,6 +91,15 @@ const FaceDetection = () => {
     };
 
     console.log('전송할 세션 데이터:', sessionData);
+
+    for (let i = 0; i < scoreLog.current[0].length; i++) {
+      const { time, value } = scoreLog.current[0][i];
+      const scoreDate = {
+        eachTime: time,
+        eachScore: value,
+      }
+      console.log('점수 데이터: ', scoreDate);
+    }
 
     fetch('http://localhost:8080/session/set-study-info', {
       method: 'POST',
@@ -213,6 +224,7 @@ const FaceDetection = () => {
         headAngleVariation,
         headMovement,
         score,
+        scoreLogger,
       );
       setTimeout(() => requestAnimationFrame(detectFaces), 100);
     };

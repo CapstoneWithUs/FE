@@ -17,8 +17,9 @@ const PNP_IDX = [1, 133, 362, 263, 33, 61, 291, 199];
 
 const PPI = 96
 const EAR_THRESHOLD = 0.15;
-const GRAPH_INTERVAL = 60000;
 
+const GRAPH_INTERVAL = 60000;
+const SCORE_LOG_TERM = 60000;
 const SLEEP_THRESHOLD = 5000;
 
 export {
@@ -31,5 +32,6 @@ export {
   PPI,
   EAR_THRESHOLD,
   GRAPH_INTERVAL,
+  SCORE_LOG_TERM,
   SLEEP_THRESHOLD,
 };

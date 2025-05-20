@@ -29,7 +29,9 @@ const ProcessFrame = (
   headAngleVariation,
   headMovement,
   score,
+  scoreLogger,
 ) => {
+  scoreLogger(score);
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "blue";
