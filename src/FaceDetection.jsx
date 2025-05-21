@@ -121,7 +121,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
         console.log('점수 데이터: ', scoreData);
         
         // 각 시간-점수 데이터 전송
-        const promise = fetch('http://localhost:8080/set-time-score-array-data', {
+        const promise = fetch('https://be-production-1350.up.railway.app/set-time-score-array-data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
