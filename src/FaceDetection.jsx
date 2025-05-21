@@ -147,7 +147,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
     }
 
     // 세션 데이터 전송
-    fetch('http://localhost:8080/set-statistics', {
+    fetch('https://be-production-1350.up.railway.app/set-statistics', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
