@@ -1,52 +1,87 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './ShowStatistics.css'; // CSS 파일 임포트
 
+const API_BASE_URL = 'http://localhost:8080';
+
 const ShowStatistics = () => {
+  const location = useLocation();
+  // 라우트에서 subject 파라미터 받기
+  const initialSubject = location.state?.subject || localStorage.getItem('currentSubject') || '';
+  
   const [statistics, setStatistics] = useState([]);
+  const [allSubjects, setAllSubjects] = useState(['전체']);
+  const [selectedSubject, setSelectedSubject] = useState('전체'); // 기본값은 '전체'
   const [timeScores, setTimeScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [overallGrade, setOverallGrade] = useState('');
   const [gradeScore, setGradeScore] = useState(0);
+  const [filteredStatistics, setFilteredStatistics] = useState([]);
 
+  // 과목명을 localStorage에 저장 (페이지 새로고침 시 유지하기 위해)
   useEffect(() => {
-    Promise.all([
-      fetchStatistics(),
-      fetchTimeScoreData()
-    ]).then(() => {
-      setLoading(false);
-    }).catch(err => {
-      setError(err.message);
-      setLoading(false);
-    });
-  }, []);
-
-  // 테스트용 시간-점수 데이터 생성 (실제 API가 동작하지 않을 경우)
-  const generateTestTimeScoreData = () => {
-    const data = [];
-    const now = Date.now();
-    const hourMs = 60 * 60 * 1000;
-    
-    // 지난 24시간 동안의 데이터 생성 (2시간 간격)
-    for (let i = 24; i >= 0; i -= 2) {
-      const time = now - (i * hourMs);
-      const date = new Date(time);
-      const score = 100 - i * 2; // 100점부터 시작해서 점점 감소
-      
-      data.push({
-        eachTime: time,
-        eachScore: score
-      });
+    if (location.state?.subject) {
+      localStorage.setItem('currentSubject', location.state.subject);
+      setSelectedSubject(location.state.subject);
     }
+  }, [location.state]);
+
+  // 통계 페이지 로드 시 필요한 데이터 가져오기
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // 모든 통계 데이터 가져오기
+        const statsData = await fetchStatistics();
+        
+        // 통계 데이터에서 과목 목록 추출
+        if (statsData && statsData.length > 0) {
+          const subjects = ['전체', ...new Set(statsData.map(item => item.subjectName).filter(Boolean))];
+          setAllSubjects(subjects);
+          
+          // 초기 과목이 있고 목록에 있으면 선택
+          if (initialSubject && subjects.includes(initialSubject)) {
+            setSelectedSubject(initialSubject);
+          }
+        }
+        
+        // 시간-점수 데이터 가져오기
+        await fetchTimeScoreData();
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('데이터 로드 중 오류:', err);
+        setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
+        setLoading(false);
+      }
+    };
     
-    return data;
-  };
+    fetchData();
+  }, [initialSubject]);
+
+  // 선택된 과목이 변경될 때 데이터 필터링
+  useEffect(() => {
+    if (statistics.length > 0) {
+      if (selectedSubject === '전체') {
+        setFilteredStatistics(statistics);
+      } else {
+        const filtered = statistics.filter(item => item.subjectName === selectedSubject);
+        setFilteredStatistics(filtered);
+      }
+      
+      // 선택된 과목 기준으로 등급 계산
+      calculateOverallGrade(selectedSubject === '전체' ? statistics : statistics.filter(item => item.subjectName === selectedSubject));
+    }
+  }, [selectedSubject, statistics]);
 
   // 통계 데이터 가져오기
   const fetchStatistics = async () => {
     try {
-      const response = await fetch('http://localhost:8080/get-all-statistics', {
+      const response = await fetch(`${API_BASE_URL}/get-all-statistics`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -55,88 +90,25 @@ const ShowStatistics = () => {
       });
 
       if (!response.ok) {
-        // 테스트용 더미 데이터 (실제 API가 동작하지 않을 경우)
-        console.warn('통계 API 호출 실패, 테스트 데이터 사용');
-        const dummyData = [
-          {
-            gradeATime: 360000, // 6분 = 0.1시간
-            gradeBTime: 360000,
-            gradeCTime: 360000,
-            gradeDTime: 0,
-            sleepTime: 360000,
-            gazeAwayTime: 360000,
-            absenceTime: 0,
-            focusScore: 78,
-            startTime: Date.now() - 3600000,
-            endTime: Date.now(),
-            subjectName: "blahblah"
-          }
-        ];
-        
-        setStatistics(dummyData);
-        calculateOverallGrade(dummyData);
-        return dummyData;
+        throw new Error(`통계 데이터를 불러오는데 실패했습니다 (${response.status})`);
       }
 
       const data = await response.json();
-      
-      // 데이터가 없으면 더미 데이터 사용
-      if (!data || data.length === 0) {
-        console.warn('API에서 빈 데이터 반환, 테스트 데이터 사용');
-        const dummyData = [
-          {
-            gradeATime: 360000, // 6분 = 0.1시간
-            gradeBTime: 360000,
-            gradeCTime: 360000,
-            gradeDTime: 0,
-            sleepTime: 360000,
-            gazeAwayTime: 360000,
-            absenceTime: 0,
-            focusScore: 78,
-            startTime: Date.now() - 3600000,
-            endTime: Date.now(),
-            subjectName: "blahblah"
-          }
-        ];
-        
-        setStatistics(dummyData);
-        calculateOverallGrade(dummyData);
-        return dummyData;
-      }
+      console.log('원본 통계 데이터:', data);
       
       setStatistics(data);
-      calculateOverallGrade(data);
+      
       return data;
     } catch (err) {
       console.error('통계 데이터 불러오기 오류:', err);
-      
-      // 테스트용 더미 데이터
-      const dummyData = [
-        {
-          gradeATime: 360000, // 6분 = 0.1시간
-          gradeBTime: 360000,
-          gradeCTime: 360000,
-          gradeDTime: 0,
-          sleepTime: 360000,
-          gazeAwayTime: 360000,
-          absenceTime: 0,
-          focusScore: 78,
-          startTime: Date.now() - 3600000,
-          endTime: Date.now(),
-          subjectName: "blahblah"
-        }
-      ];
-      
-      setStatistics(dummyData);
-      calculateOverallGrade(dummyData);
-      return dummyData;
+      throw new Error('통계 데이터를 불러오는데 문제가 발생했습니다.');
     }
   };
 
   // 시간-점수 데이터 가져오기
   const fetchTimeScoreData = async () => {
     try {
-      const response = await fetch('http://localhost:8080/get-all-time-score-array-data', {
+      const response = await fetch(`${API_BASE_URL}/get-all-time-score-array-data`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -145,56 +117,78 @@ const ShowStatistics = () => {
       });
 
       if (!response.ok) {
-        // API 호출 실패 시 테스트 데이터 사용
-        console.warn('시간-점수 API 호출 실패, 테스트 데이터 사용');
-        const testData = generateTestTimeScoreData();
-        processTimeScoreData(testData);
-        return testData;
+        throw new Error(`시간-점수 데이터를 불러오는데 실패했습니다 (${response.status})`);
       }
 
       const data = await response.json();
+      console.log('원본 시간-점수 데이터:', data);
       
-      // 데이터가 없으면 테스트 데이터 사용
-      if (!data || data.length === 0) {
-        console.warn('API에서 빈 데이터 반환, 테스트 데이터 사용');
-        const testData = generateTestTimeScoreData();
-        processTimeScoreData(testData);
-        return testData;
+      if (!Array.isArray(data)) {
+        console.error('시간-점수 데이터가 배열이 아닙니다:', data);
+        throw new Error('API 응답 형식이 잘못되었습니다.');
       }
       
+      if (data.length === 0) {
+        console.warn('시간-점수 데이터가 없습니다');
+        setTimeScores([]);
+        return [];
+      }
+      
+      // 데이터 형식 확인 및 변환
       processTimeScoreData(data);
       return data;
     } catch (err) {
       console.error('시간-점수 데이터 불러오기 오류:', err);
-      // 테스트 데이터 사용
-      const testData = generateTestTimeScoreData();
-      processTimeScoreData(testData);
-      return testData;
+      throw new Error('시간-점수 데이터를 불러오는데 문제가 발생했습니다.');
     }
   };
   
   // 시간-점수 데이터 처리
   const processTimeScoreData = (data) => {
-    // 시간 순서대로 정렬
-    const sortedData = [...data].sort((a, b) => a.eachTime - b.eachTime);
+    if (!data || data.length === 0) {
+      setTimeScores([]);
+      return;
+    }
     
-    // 데이터 형식 변환
-    const formattedData = sortedData.map(item => {
-      // 유닉스 타임스탬프(밀리초)를 Date 객체로 변환
-      const date = new Date(item.eachTime);
-      return {
-        time: date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        rawTime: date, // 원본 Date 객체 저장 (정렬 및 Tooltip용)
-        score: item.eachScore,
-        timestamp: item.eachTime
-      };
-    });
+    console.log('첫 번째 시간-점수 데이터 항목:', data[0]);
     
-    setTimeScores(formattedData);
+    // null 체크 및 타입 변환 함수
+    const safeNumber = (value) => {
+      if (value === null || value === undefined) return 0;
+      return typeof value === 'number' ? value : Number(value);
+    };
+    
+    try {
+      // 데이터 형식 변환
+      const formattedData = data.map(item => {
+        const timestamp = safeNumber(item.eachTime);
+        const score = safeNumber(item.eachScore);
+        
+        // 유닉스 타임스탬프(밀리초)를 Date 객체로 변환
+        const date = new Date(timestamp);
+        
+        return {
+          time: date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          rawTime: date,
+          score: score,
+          timestamp: timestamp
+        };
+      });
+      
+      // 시간 순서대로 정렬
+      const sortedData = formattedData.sort((a, b) => a.timestamp - b.timestamp);
+      
+      console.log('가공된 시간-점수 데이터:', sortedData);
+      setTimeScores(sortedData);
+    } catch (err) {
+      console.error('시간-점수 데이터 처리 중 오류:', err);
+      setTimeScores([]);
+    }
   };
 
   // 시간을 시:분:초 형식으로 변환
   const formatTime = (ms) => {
+    ms = Number(ms) || 0;
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -205,6 +199,7 @@ const ShowStatistics = () => {
 
   // 차트용 짧은 시간 포맷 (시간만)
   const formatTimeShort = (ms) => {
+    ms = Number(ms) || 0;
     return (ms / (1000 * 60 * 60)).toFixed(2);
   };
 
@@ -212,6 +207,7 @@ const ShowStatistics = () => {
   const calculateOverallGrade = (data) => {
     if (!data || data.length === 0) {
       setOverallGrade('N/A');
+      setGradeScore(0);
       return;
     }
 
@@ -221,16 +217,17 @@ const ShowStatistics = () => {
     let totalGradeDTime = 0;
     
     data.forEach(session => {
-      totalGradeATime += session.gradeATime || 0;
-      totalGradeBTime += session.gradeBTime || 0;
-      totalGradeCTime += session.gradeCTime || 0;
-      totalGradeDTime += session.gradeDTime || 0;
+      totalGradeATime += Number(session.gradeATime) || 0;
+      totalGradeBTime += Number(session.gradeBTime) || 0;
+      totalGradeCTime += Number(session.gradeCTime) || 0;
+      totalGradeDTime += Number(session.gradeDTime) || 0;
     });
 
     const totalStudyTime = totalGradeATime + totalGradeBTime + totalGradeCTime + totalGradeDTime;
     
     if (totalStudyTime === 0) {
       setOverallGrade('N/A');
+      setGradeScore(0);
       return;
     }
 
@@ -241,7 +238,8 @@ const ShowStatistics = () => {
        totalGradeDTime * 35) / totalStudyTime
     );
     
-    setGradeScore(Math.round(score));
+    const roundedScore = Math.round(score);
+    setGradeScore(roundedScore);
     
     // Determine grade based on score
     if (score >= 90) {
@@ -260,8 +258,9 @@ const ShowStatistics = () => {
     // Group by subject name if multiple subjects exist
     const subjectData = {};
     
-    statistics.forEach(session => {
-      const subject = session.subjectName || 'blahblah';
+    // 필터링된 통계 사용
+    filteredStatistics.forEach(session => {
+      const subject = session.subjectName || '과목 없음';
       
       if (!subjectData[subject]) {
         subjectData[subject] = {
@@ -273,10 +272,10 @@ const ShowStatistics = () => {
         };
       }
       
-      subjectData[subject].gradeA += session.gradeATime || 0;
-      subjectData[subject].gradeB += session.gradeBTime || 0;
-      subjectData[subject].gradeC += session.gradeCTime || 0;
-      subjectData[subject].gradeD += session.gradeDTime || 0;
+      subjectData[subject].gradeA += Number(session.gradeATime) || 0;
+      subjectData[subject].gradeB += Number(session.gradeBTime) || 0;
+      subjectData[subject].gradeC += Number(session.gradeCTime) || 0;
+      subjectData[subject].gradeD += Number(session.gradeDTime) || 0;
     });
     
     // Convert to hours for display
@@ -302,7 +301,15 @@ const ShowStatistics = () => {
 
   // 안전하게 값 계산하기
   const getTotalTime = (accessor) => {
-    return statistics.reduce((sum, session) => sum + (session[accessor] || 0), 0);
+    return filteredStatistics.reduce((sum, session) => {
+      const value = session[accessor];
+      return sum + (Number(value) || 0);
+    }, 0);
+  };
+
+  // 과목 선택 핸들러
+  const handleSubjectChange = (e) => {
+    setSelectedSubject(e.target.value);
   };
 
   if (loading) {
@@ -323,12 +330,69 @@ const ShowStatistics = () => {
       </div>
     );
   }
+  
+  // 데이터가 없는 경우 메시지 표시
+  if (statistics.length === 0) {
+    return (
+      <div className="statistics-container">
+        <h1 className="page-title">학습 통계</h1>
+        <div className="no-data-message full-page">
+          <p>통계 데이터가 없습니다.</p>
+          <p>먼저 학습을 진행한 후 통계를 확인해주세요.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 필터링된 데이터가 없는 경우 메시지 표시
+  if (filteredStatistics.length === 0 && selectedSubject !== '전체') {
+    return (
+      <div className="statistics-container">
+        <h1 className="page-title">학습 통계</h1>
+        
+        {/* 과목 선택 드롭다운 */}
+        <div className="subject-selector">
+          <label htmlFor="subject-select">과목 선택:</label>
+          <select 
+            id="subject-select" 
+            value={selectedSubject} 
+            onChange={handleSubjectChange}
+            className="subject-select-dropdown"
+          >
+            {allSubjects.map(subject => (
+              <option key={subject} value={subject}>{subject}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="no-data-message full-page">
+          <p>'{selectedSubject}' 과목에 대한 통계 데이터가 없습니다.</p>
+          <p>다른 과목을 선택하거나, 해당 과목의 학습을 진행한 후 통계를 확인해주세요.</p>
+        </div>
+      </div>
+    );
+  }
 
   const chartData = prepareChartData();
 
   return (
     <div className="statistics-container">
       <h1 className="page-title">학습 통계</h1>
+      
+      {/* 과목 선택 드롭다운 */}
+      <div className="subject-selector">
+        <label htmlFor="subject-select">과목 선택:</label>
+        <select 
+          id="subject-select" 
+          value={selectedSubject} 
+          onChange={handleSubjectChange}
+          className="subject-select-dropdown"
+        >
+          {allSubjects.map(subject => (
+            <option key={subject} value={subject}>{subject}</option>
+          ))}
+        </select>
+      </div>
       
       <div className="dashboard-layout">
         {/* 왼쪽 영역 - 등급과 요약 통계 */}
@@ -343,6 +407,7 @@ const ShowStatistics = () => {
             </div>
             <div className="grade-info">
               <div className="grade-score">점수: {gradeScore}</div>
+              <div className="grade-subject">{selectedSubject === '전체' ? '전체 과목' : selectedSubject}</div>
             </div>
           </div>
           
@@ -411,9 +476,15 @@ const ShowStatistics = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="time"
+                      tickCount={5}
                       tickFormatter={(value, index) => {
-                        // timeScores 배열에서 해당 인덱스의 실제 시간 값 사용
-                        const item = timeScores[index];
+                        if (timeScores.length === 0) return '';
+                        // 인덱스를 균등하게 분배
+                        const actualIndex = Math.min(
+                          Math.floor(index * (timeScores.length / 5)), 
+                          timeScores.length - 1
+                        );
+                        const item = timeScores[actualIndex];
                         return item ? item.time : '';
                       }}
                       label={{ value: '시간', position: 'insideBottomRight', offset: -10 }}
@@ -425,7 +496,6 @@ const ShowStatistics = () => {
                     <Tooltip 
                       formatter={(value) => [`${value} 점`, '집중도']}
                       labelFormatter={(label, items) => {
-                        // items[0].payload에서 rawTime 사용
                         if (items.length > 0 && items[0].payload && items[0].payload.rawTime) {
                           return items[0].payload.rawTime.toLocaleString();
                         }

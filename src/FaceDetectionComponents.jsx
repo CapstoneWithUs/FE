@@ -102,12 +102,35 @@ export const AwayMessage = () => (
   </div>
 );
 
-// VideoPanel 컴포넌트에 자리 비움 메시지 추가
-export const VideoPanel = ({ videoRef, studyTime, state }) => (
+// VideoPanel 컴포넌트를 수정하여 과목명 표시 추가
+export const VideoPanel = ({ videoRef, studyTime, state, subject }) => (
   <div style={styles.videoContainer}>
     <video ref={videoRef} autoPlay playsInline style={styles.video} />
     <TimeBadge position="left" studyTime={studyTime} />
     {state === 2 && <AwayMessage />}
+    {/* 과목명 표시 배지 추가 */}
+    {subject && (
+      <div style={{
+        position: 'absolute',
+        top: '40px',
+        left: '1rem',
+        background: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '0.5rem 0.75rem',
+        borderRadius: '0.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(4px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        zIndex: 10
+      }}>
+        <span style={{ fontSize: '14px', fontWeight: 'bold' }}>
+          과목: {subject}
+        </span>
+      </div>
+    )}
   </div>
 );
 
