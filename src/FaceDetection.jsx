@@ -77,16 +77,16 @@ const FaceDetection = () => {
   const sendSessionDataToBackend = () => {
     // 최종 전송 데이터
     const sessionData = {
-      startTime: Number(window.startTime) || 0,
-      endTime: Number(Date.now()),
       gradeATime: Number(window.accTime[0]) || 0,
       gradeBTime: Number(window.accTime[1]) || 0,
       gradeCTime: Number(window.accTime[2]) || 0,
       gradeDTime: Number(window.accTime[3]) || 0,
-      absenceTime: Number(window.accTime[4]) || 0,
       sleepTime: Number(window.accTime[5]) || 0,
       gazeAwayTime: Number(window.accTime[6]) || 0,
+      absenceTime: Number(window.accTime[4]) || 0,
       focusScore: 0, //TODO
+      startTime: Number(window.startTime) || 0,
+      endTime: Number(Date.now()),
       subjectName: "blahblah", //TODO
     };
 
@@ -101,7 +101,7 @@ const FaceDetection = () => {
       console.log('점수 데이터: ', scoreDate);
     }
 
-    fetch('http://localhost:8080/session/set-study-info', {
+    fetch('http://localhost:8080/set-statistics', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
