@@ -14,13 +14,13 @@ function Navbar() {
       </button>
       <button
         className="flex flex-col items-center justify-center px-4 py-2 border-2 border-gray-700 rounded-lg bg-white mx-2 shadow-sm hover:bg-gray-200 transition"
-        onClick={() => navigate('/StatsPage')}
+        onClick={() => navigate('/statistics')}
       >
         통계
       </button>
       <button
         className="flex flex-col items-center justify-center px-4 py-2 border-2 border-gray-700 rounded-lg bg-white mx-2 shadow-sm hover:bg-gray-200 transition"
-        onClick={() => navigate('/statistics')}
+        onClick={() => navigate('/RankingPage')}
       >
         랭킹
       </button>
