@@ -3,7 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './ShowStatistics.css'; // CSS 파일 임포트
 
-const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://be-production-1350.up.railway.app';
 
 const ShowStatistics = () => {
   const location = useLocation();
