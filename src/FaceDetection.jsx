@@ -42,13 +42,13 @@ const LoadCV = async () => {
 // 이 window 객체에 전역 변수 선언
 window.prvTime = performance.now();
 window.startTime = Date.now(); // 공부 측정 시작 시간
-window.accTime = [ 0, 0, 0, 0, 0, 0, 0 ]; // [A, B, C, D, absence, sleep, gaze_away]
+window.accTime = [0, 0, 0, 0, 0, 0, 0]; // [A, B, C, D, absence, sleep, gaze_away]
 window.STATE = 0;
 window.isEyeClosed = false; // 눈 감은 상태 추적 변수
 window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수
 window.isSleeping = false; // 수면 상태 추적 변수
 
-const FaceDetection = () => {
+const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
   const [focalLength, setFocalLength] = useState(380);
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
@@ -68,11 +68,25 @@ const FaceDetection = () => {
     now: performance.now(),
     state: 0,
     startTime: Date.now(),
-    accTime: [ 0, 0, 0, 0, 0, 0, 0 ],
+    accTime: [0, 0, 0, 0, 0, 0, 0],
     isEyeClosed: false,
     eyeClosedTime: 0,
     isSleeping: false
   });
+
+  // localStorage에서 과목명을 가져오거나 props에서 받은 값 사용, 둘 다 없으면 'Blank' 사용
+  const [currentSubject, setCurrentSubject] = useState(
+    subject || localStorage.getItem('currentSubject') || 'Blank'
+  );
+
+  // subject prop이 변경되면 currentSubject 업데이트
+  useEffect(() => {
+    if (subject) {
+      setCurrentSubject(subject);
+      localStorage.setItem('currentSubject', subject); // localStorage에 저장
+      console.log('측정 과목:', subject);
+    }
+  }, [subject]);
 
   const sendSessionDataToBackend = () => {
     // 최종 전송 데이터
@@ -84,24 +98,56 @@ const FaceDetection = () => {
       sleepTime: Number(window.accTime[5]) || 0,
       gazeAwayTime: Number(window.accTime[6]) || 0,
       absenceTime: Number(window.accTime[4]) || 0,
-      focusScore: 0, //TODO
+      focusScore: calculateAverageFocusScore(), // 평균 집중도 계산
       startTime: Number(window.startTime) || 0,
       endTime: Number(Date.now()),
-      subjectName: "blahblah", //TODO
+      subjectName: currentSubject,
     };
 
     console.log('전송할 세션 데이터:', sessionData);
 
-    for (let i = 0; i < scoreLog.current[0].length; i++) {
-      const { time, value } = scoreLog.current[0][i];
-      const scoreDate = {
-        eachTime: time,
-        eachScore: value,
+    // 시간-점수 데이터 전송 준비
+    const timeScorePromises = [];
+    
+    // scoreLog 데이터 확인 및 처리
+    if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
+      for (let i = 0; i < scoreLog.current[0].length; i++) {
+        const { time, value } = scoreLog.current[0][i];
+        const scoreData = {
+          eachTime: time,
+          eachScore: value,
+        };
+        
+        console.log('점수 데이터: ', scoreData);
+        
+        // 각 시간-점수 데이터 전송
+        const promise = fetch('https://be-production-1350.up.railway.app/set-time-score-array-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(scoreData),
+          credentials: 'include'
+        }).then(response => {
+          if (!response.ok) {
+            return response.text().then(text => {
+              console.error(`시간-점수 데이터 전송 오류! 상태: ${response.status}, 응답: ${text}`);
+              throw new Error(`시간-점수 데이터 전송 오류! 상태: ${response.status}`);
+            });
+          }
+          return response;
+        }).catch(error => {
+          console.error('시간-점수 데이터 전송 실패:', error);
+          // 개별 오류는 무시하고 진행
+          return null;
+        });
+        
+        timeScorePromises.push(promise);
       }
-      console.log('점수 데이터: ', scoreDate);
     }
 
-    fetch('http://localhost:8080/set-statistics', {
+    // 세션 데이터 전송
+    fetch('https://be-production-1350.up.railway.app/set-statistics', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -120,6 +166,11 @@ const FaceDetection = () => {
       })
       .then(data => {
         console.log('세션 데이터 전송 성공:', data);
+        
+        // 모든 시간-점수 데이터 전송 시도 (결과는 무시)
+        return Promise.allSettled(timeScorePromises);
+      })
+      .then(() => {
         alert("세션 데이터가 성공적으로 저장되었습니다!");
       })
       .catch(error => {
@@ -128,6 +179,16 @@ const FaceDetection = () => {
       });
   };
 
+  // 평균 집중도 점수 계산
+  const calculateAverageFocusScore = () => {
+    if (!scoreLog.current || !scoreLog.current[0] || scoreLog.current[0].length === 0) {
+      return 0;
+    }
+    
+    const scores = scoreLog.current[0];
+    const sum = scores.reduce((total, item) => total + item.value, 0);
+    return Math.round(sum / scores.length);
+  };
 
   // 타이머 설정 - UI 업데이트용 (100ms마다 업데이트)
   useEffect(() => {
@@ -136,7 +197,7 @@ const FaceDetection = () => {
         now: performance.now(),
         state: window.STATE,
         startTime: window.startTime || performance.now(),
-        accTime: window.accTime || [ 0, 0, 0, 0, 0, 0, 0 ],
+        accTime: window.accTime || [0, 0, 0, 0, 0, 0, 0],
         isEyeClosed: window.isEyeClosed || false,
         eyeClosedTime: window.eyeClosedTime || 0,
         isSleeping: window.isSleeping || false
@@ -204,7 +265,6 @@ const FaceDetection = () => {
       }
       const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
 
-      
       const now = performance.now();
       const score = calculateFocusScore(
         window.STATE,
@@ -244,8 +304,9 @@ const FaceDetection = () => {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <VideoPanel
               videoRef={videoRef}
-              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc+cur, 0)}
-              state={stateInfo.state} // 상태 정보 전달
+              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)}
+              state={stateInfo.state}
+              subject={currentSubject} // 과목명 전달
             />
             <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
           </div>
@@ -254,9 +315,9 @@ const FaceDetection = () => {
             <CanvasPanel
               canvasRef={canvasRef}
               state={stateInfo.state}
-              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc+cur, 0)}
+              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)}
             />
-            <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc+cur, 0)} sleepTime={stateInfo.accTime[5]} />
+            <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
           </div>
         </div>
       )}
