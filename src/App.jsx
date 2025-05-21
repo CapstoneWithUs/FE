@@ -13,6 +13,7 @@ import SettingPage from './pages/SettingPage';
 import AddSubjectPage from './pages/AddSubjectPage';
 import Header from './components/Header';
 import Navbar from './components/Navbar';
+import ShowStatistics from './pages/statistics/ShowStatistics';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path="/debugging" element={<FaceDetection />} />
           <Route path="/add-subject" element={<AddSubjectPage />} />
           <Route path="*" element={<NotFoundPage />} />
+          <Route path="/statistics" element={<ShowStatistics />} />
         </Routes>
       </div>
       <Navbar />
