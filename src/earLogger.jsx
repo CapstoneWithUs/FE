@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GRAPH_INTERVAL } from './constants';
 
 export function useEarLogger() {
   const [leftEarHistory, setLeftEarHistory] = useState([]);
   const [rightEarHistory, setRightEarHistory] = useState([]);
+  
+  const leftEarHistoryRef = useRef([]);
+  useEffect(() => { leftEarHistoryRef.current = leftEarHistory; }, [leftEarHistory]);
+  const rightEarHistoryRef = useRef([]);
+  useEffect(() => { rightEarHistoryRef.current = rightEarHistory; }, [rightEarHistory]);
 
   const earLogger = (leftEar, rightEar) => {
     const now = performance.now();
@@ -23,7 +28,9 @@ export function useEarLogger() {
 
   return {
     leftEarHistory,
+    leftEarHistoryRef,
     rightEarHistory,
+    rightEarHistoryRef,
     earLogger
   };
 }
