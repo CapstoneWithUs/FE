@@ -15,7 +15,7 @@ function Header() {
     <header className={styles.header}>
       {/* 앱 이름: 좌측 상단 */}
       <h1 className={styles.appTitle}>
-        FocusMate
+        PocusMate
       </h1>
       {/* 날짜: 중앙 */}
       <div className={styles.dateDisplay}>
