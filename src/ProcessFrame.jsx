@@ -20,6 +20,7 @@ import { accumulateTime } from "./accumulateTime";
 // window.isEyeClosed = false; // 눈 감은 상태 추적 변수 추가
 // window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수 추가
 // window.isSleeping = false; // 수면 상태 추적 변수 추가
+// window.isSessionActive = false; // 세션 활성화 상태 추가
 
 //0: 준비 중, 1: 공부 중, 2: 자리 이탈, 3: 수면, 4: 다른 곳 응시
 const ProcessFrame = (
@@ -40,9 +41,35 @@ const ProcessFrame = (
   // 현재 시간 가져오기
   const currentTime = performance.now();
   
-  // 공부 중일 때만 시간 증가
-  if (window.STATE != 0) {
+  // 세션이 활성화되어 있고 공부 중일 때만 시간 증가
+  if (window.isSessionActive && window.STATE != 0) {
     accumulateTime(window.prvTime, currentTime, window.accTime, window.STATE, score);
+  }
+  
+  // 세션이 활성화되지 않은 경우 대기 메시지 표시
+  if (!window.isSessionActive) {
+    ctx.fillStyle = "white";
+    ctx.font = "bold 36px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    
+    // 화면 중앙에 메시지 표시
+    ctx.fillText("측정 시작 버튼을 눌러주세요", canvas.width/2, canvas.height/2);
+    
+    // 재생 아이콘 그리기 (녹색 삼각형)
+    const triangleSize = 30;
+    const triangleY = canvas.height/2 - 50;
+    
+    ctx.fillStyle = "#10b981";
+    ctx.beginPath();
+    ctx.moveTo(canvas.width/2 - 20, triangleY - triangleSize);
+    ctx.lineTo(canvas.width/2 + 20, triangleY);
+    ctx.lineTo(canvas.width/2 - 20, triangleY + triangleSize);
+    ctx.closePath();
+    ctx.fill();
+    
+    window.prvTime = currentTime;
+    return;
   }
   
   // 얼굴이 감지되지 않으면 "자리 이탈" 상태로 변경
