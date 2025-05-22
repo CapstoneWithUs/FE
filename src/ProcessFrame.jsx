@@ -59,7 +59,7 @@ const ProcessFrame = (
   
   let coordination = PNP_IDX.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
   let [pitch, yaw, roll, x, y, z] = getPose(cv, ORIGINAL_POINTS, coordination, focal_length, w, h);
-  pitch += 3/180*Math.PI;
+  pitch += 7/180*Math.PI;
   
   const [Yaw, Pitch, Roll] = [yaw, pitch, roll].map(x => Math.round(x*180/Math.PI));
   
