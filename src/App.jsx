@@ -19,6 +19,7 @@ function App() {
   return (
     <BrowserRouter>
       <Header />
+      <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/landingPage" element={<LandingPage />} />
@@ -33,7 +34,6 @@ function App() {
           <Route path="*" element={<HomePage />} />
           <Route path="/statistics" element={<ShowStatistics />} />
         </Routes>
-      <Navbar />
     </BrowserRouter>
   );
 }
