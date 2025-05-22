@@ -13,7 +13,11 @@ import {
   UserGuide,
   ScoreGraph,
   EndSessionButton,
-  StartSessionButton
+  StartSessionButton,
+  ModeSelector,
+  MainContentLayout,
+  VideoSection,
+  RightPanel
 } from './FaceDetectionComponents';
 
 import calculateFocusScore from "./calculateFocusScore";
@@ -25,6 +29,8 @@ import { useEarLogger } from "./earLogger";
 import { useHeadAngleVariation } from "./headAngleVariation";
 import { useHeadMovement } from "./headMovement";
 import { useScoreLogger } from "./useScoreLogger";
+
+import { useCanvas } from "./components/CanvasOverlay";
 
 const LoadCV = async () => {
   if (typeof cv === "undefined") {
@@ -43,16 +49,30 @@ const LoadCV = async () => {
 
 // 이 window 객체에 전역 변수 선언
 window.prvTime = performance.now();
-window.startTime = Date.now(); // 공부 측정 시작 시간
-window.accTime = [0, 0, 0, 0, 0, 0, 0]; // [A, B, C, D, absence, sleep, gaze_away]
+window.startTime = Date.now();
+window.accTime = [0, 0, 0, 0, 0, 0, 0];
 window.STATE = 0;
-window.isEyeClosed = false; // 눈 감은 상태 추적 변수
-window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수
-window.isSleeping = false; // 수면 상태 추적 변수
-window.isSessionActive = false; // 세션 활성화 상태 추가
+window.isEyeClosed = false;
+window.eyeClosedTime = 0;
+window.isSleeping = false;
+window.isSessionActive = false;
 
-const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
+const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
   const navigate = useNavigate();
+
+  // 컴포넌트 마운트 시 전역 변수 초기화
+  useEffect(() => {
+    window.prvTime = performance.now();
+    window.startTime = Date.now();
+    window.accTime = [0, 0, 0, 0, 0, 0, 0];
+    window.STATE = 0;
+    window.isEyeClosed = false;
+    window.eyeClosedTime = 0;
+    window.isSleeping = false;
+    window.isSessionActive = false;
+    console.log('FaceDetection 컴포넌트 초기화됨');
+  }, []); // 빈 배열로 마운트 시에만 실행
+
   const [focalLength, setFocalLength] = useState(380);
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
@@ -64,11 +84,26 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
   const { scoreLog, scoreLogger } = useScoreLogger(Date.now());
 
   const videoRef = useRef(null);
+  const displayModeRef = useRef("webcam");
+  useEffect(() => {
+    displayModeRef.current = displayMode;
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      if (displayMode == "webcam") canvas.style.backgroundColor = "transparent";
+      if (displayMode == "debug") canvas.style.backgroundColor = "blue";
+      if (displayMode == "pip") canvas.style.backgroundColor = "black";
+      if (displayMode == "faceOff") canvas.style.backgroundColor = "black";
+    }
+    if (videoRef.current && displayMode == "pip") videoRef.current.requestPictureInPicture();
+  }, [displayMode]);
+
   const canvasRef = useRef(null);
+  const canvasOverlayRef = useCanvas();
   const [faceLandmarker, setFaceLandmarker] = useState(null);
   const faceLandmarkerRef = useRef(null);
   const [loading, setLoading] = useState(true);
-  const [sessionActive, setSessionActive] = useState(false); // 세션 활성화 상태
+  const [sessionActive, setSessionActive] = useState(false);
   const [stateInfo, setStateInfo] = useState({
     now: performance.now(),
     state: 0,
@@ -79,23 +114,19 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
     isSleeping: false
   });
 
-  // localStorage에서 과목명을 가져오거나 props에서 받은 값 사용, 둘 다 없으면 'Blank' 사용
   const [currentSubject, setCurrentSubject] = useState(
     subject || localStorage.getItem('currentSubject') || 'Blank'
   );
 
-  // subject prop이 변경되면 currentSubject 업데이트
   useEffect(() => {
     if (subject) {
       setCurrentSubject(subject);
-      localStorage.setItem('currentSubject', subject); // localStorage에 저장
+      localStorage.setItem('currentSubject', subject);
       console.log('측정 과목:', subject);
     }
   }, [subject]);
 
-  // 측정 시작 함수
   const startSession = () => {
-    // 전역 변수 초기화
     window.prvTime = performance.now();
     window.startTime = Date.now();
     window.accTime = [0, 0, 0, 0, 0, 0, 0];
@@ -104,13 +135,12 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
     window.eyeClosedTime = 0;
     window.isSleeping = false;
     window.isSessionActive = true;
-    
+
     setSessionActive(true);
     console.log('측정 시작됨:', currentSubject);
   };
 
   const sendSessionDataToBackend = () => {
-    // 최종 전송 데이터
     const sessionData = {
       gradeATime: Number(window.accTime[0]) || 0,
       gradeBTime: Number(window.accTime[1]) || 0,
@@ -119,7 +149,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       sleepTime: Number(window.accTime[5]) || 0,
       gazeAwayTime: Number(window.accTime[6]) || 0,
       absenceTime: Number(window.accTime[4]) || 0,
-      focusScore: calculateAverageFocusScore(), // 평균 집중도 계산
+      focusScore: calculateAverageFocusScore(),
       startTime: Number(window.startTime) || 0,
       endTime: Number(Date.now()),
       subjectName: currentSubject,
@@ -127,10 +157,8 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
 
     console.log('전송할 세션 데이터:', sessionData);
 
-    // 시간-점수 데이터 전송 준비
     const timeScorePromises = [];
-    
-    // scoreLog 데이터 확인 및 처리
+
     if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
       for (let i = 0; i < scoreLog.current[0].length; i++) {
         const { time, value } = scoreLog.current[0][i];
@@ -138,10 +166,9 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
           eachTime: time,
           eachScore: value,
         };
-        
+
         console.log('점수 데이터: ', scoreData);
-        
-        // 각 시간-점수 데이터 전송
+
         const promise = fetch('https://be-production-1350.up.railway.app/set-time-score-array-data', {
           method: 'POST',
           headers: {
@@ -159,15 +186,13 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
           return response;
         }).catch(error => {
           console.error('시간-점수 데이터 전송 실패:', error);
-          // 개별 오류는 무시하고 진행
           return null;
         });
-        
+
         timeScorePromises.push(promise);
       }
     }
 
-    // 세션 데이터 전송
     fetch('https://be-production-1350.up.railway.app/set-statistics', {
       method: 'POST',
       headers: {
@@ -187,13 +212,10 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       })
       .then(data => {
         console.log('세션 데이터 전송 성공:', data);
-        
-        // 모든 시간-점수 데이터 전송 시도 (결과는 무시)
         return Promise.allSettled(timeScorePromises);
       })
       .then(() => {
         alert("세션 데이터가 성공적으로 저장되었습니다!");
-        // 세션 종료 후 통계 페이지로 이동
         navigate('/statistics', { state: { subject: currentSubject } });
       })
       .catch(error => {
@@ -202,18 +224,16 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       });
   };
 
-  // 평균 집중도 점수 계산
   const calculateAverageFocusScore = () => {
     if (!scoreLog.current || !scoreLog.current[0] || scoreLog.current[0].length === 0) {
       return 0;
     }
-    
+
     const scores = scoreLog.current[0];
     const sum = scores.reduce((total, item) => total + item.value, 0);
     return Math.round(sum / scores.length);
   };
 
-  // 타이머 설정 - UI 업데이트용 (100ms마다 업데이트)
   useEffect(() => {
     const timer = setInterval(() => {
       setStateInfo({
@@ -281,13 +301,13 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       }
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      const canvasOverlay = canvasOverlayRef.current;
 
       if (typeof window.cv === "undefined" || !faceLandmarkerRef.current || video.readyState <= 2) {
         requestAnimationFrame(detectFaces);
         return;
       }
-      
-      // 세션이 활성화되지 않은 경우 측정하지 않음
+
       if (!sessionActive || !window.isSessionActive) {
         requestAnimationFrame(detectFaces);
         return;
@@ -306,9 +326,9 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
         getTimeDecayAvg(headMovementHistoryRef.current, now)
       ) * 100;
 
-      // ProcessFrame 함수 직접 호출
       ProcessFrame(
-        window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480,
+        displayModeRef.current,
+        window.cv, canvas, canvasOverlay, faces.faceLandmarks, focalRef.current, 640, 480,
         blinkCounter,
         earLogger,
         headAngleVariation,
@@ -321,57 +341,171 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
     requestAnimationFrame(detectFaces);
   }, [faceLandmarker, sessionActive]);
 
+  const handleModeChange = (mode) => {
+    // displayMode 변경 로직은 FocusTrackerPage에서 처리
+  };
+
   return (
     <div style={styles.container}>
       <style>{styles.globalCss}</style>
 
+      <ModeSelector displayMode={displayMode} onModeChange={handleModeChange} />
       <Header />
 
       {loading ? (
         <LoadingScreen />
       ) : (
-        <div style={styles.mainContent}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <VideoPanel
-              videoRef={videoRef}
-              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)}
-              state={stateInfo.state}
-              subject={currentSubject} // 과목명 전달
-            />
-            <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
-          </div>
+        <MainContentLayout>
+          {/* 왼쪽: 비디오 섹션 */}
+          <VideoSection>
+            <div style={styles.videoContainer}>
+              <video ref={videoRef} autoPlay playsInline style={styles.video} />
+              <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <CanvasPanel
-              canvasRef={canvasRef}
-              state={stateInfo.state}
-              studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)}
-            />
-            <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
-          </div>
-        </div>
+              {displayMode === 'faceOff' && (
+                <div style={{
+                  position: 'absolute',
+                  top: 10,
+                  left: 170,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2rem',
+                  padding: '2rem'
+                }}>
+                  {/* 과목명 */}
+                  <div style={{
+                    background: 'rgba(59, 130, 246, 0.2)',
+                    border: '2px solid rgba(59, 130, 246, 0.5)',
+                    borderRadius: '1rem',
+                    padding: '1rem 2rem',
+                    textAlign: 'center'
+                  }}>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#bfdbfe' }}>
+                      {currentSubject}
+                    </h2>
+                  </div>
+
+                  {/* 큰 타이머 */}
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.2)',
+                    border: '2px solid rgba(16, 185, 129, 0.5)',
+                    borderRadius: '1rem',
+                    padding: '2rem',
+                    textAlign: 'center'
+                  }}>
+                    <span style={{
+                      fontFamily: 'monospace',
+                      fontSize: '3rem',
+                      fontWeight: 'bold',
+                      color: '#10b981'
+                    }}>
+                      {(() => {
+                        const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
+                        const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                        const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                        const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                        return `${hours}:${minutes}:${seconds}`;
+                      })()}
+                    </span>
+                    <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      총 공부 시간
+                    </p>
+                  </div>
+
+                  {/* 현재 상태 */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '1rem',
+                    padding: '1.5rem',
+                    textAlign: 'center'
+                  }}>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
+                      {(() => {
+                        switch (stateInfo.state) {
+                          case 0: return '준비 중';
+                          case 1: return '공부 중';
+                          case 2: return '자리 이탈';
+                          case 3: return '수면';
+                          case 4: return '다른 곳 응시';
+                          default: return '준비 중';
+                        }
+                      })()}
+                    </span>
+                    <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      현재 상태
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ ...styles.badge, top: "1rem", left: "1rem" }}>
+                <span style={{
+                  fontFamily: "monospace",
+                  fontSize: "1.25rem",
+                  color: "#FFFFFF",
+                  fontWeight: "bold"
+                }}>
+                  {(() => {
+                    const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
+                    const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                    const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                    const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                    return `${hours}:${minutes}:${seconds}`;
+                  })()}
+                </span>
+              </div>
+
+              {stateInfo.state === 2 && (
+                <div style={styles.awayMessageContainer}>
+                  <p style={styles.awayMessageText}>자리를 비웠습니다</p>
+                </div>
+              )}
+
+              {currentSubject && (
+                <div style={{
+                  position: 'absolute',
+                  top: '40px',
+                  left: '1rem',
+                  background: 'linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)',
+                  color: '#FFFFFF',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>
+                  과목: {currentSubject}
+                </div>
+              )}
+            </div>
+          </VideoSection>
+
+          {/* 오른쪽: 컨트롤 패널 */}
+          <RightPanel
+            studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)}
+            sleepTime={stateInfo.accTime[5]}
+            focalLength={focalLength}
+            setFocalLength={setFocalLength}
+            sessionActive={sessionActive}
+            onStartSession={startSession}
+            onEndSession={sendSessionDataToBackend}
+          />
+        </MainContentLayout>
       )}
 
-      <UserGuide />
-      
-      {/* 측정 시작/종료 버튼 */}
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-        {!sessionActive ? (
-          <StartSessionButton onStartSession={startSession} />
-        ) : (
-          <EndSessionButton onEndSession={sendSessionDataToBackend} />
-        )}
-      </div>
-      
-      <ScoreGraph
-        leftBlinkHistory={leftBlinkHistory}
-        rightBlinkHistory={rightBlinkHistory}
-        leftEarHistory={leftEarHistory}
-        rightEarHistory={rightEarHistory}
-        headAngleVariationHistory={headAngleVariationHistory}
-        headMovementHistory={headMovementHistory}
-        now={stateInfo.now}
-      />
+      {/* 디버깅 화면일 때만 ScoreGraph 표시 */}
+      {displayMode === 'debug' && (
+        <ScoreGraph
+          leftBlinkHistory={leftBlinkHistory}
+          rightBlinkHistory={rightBlinkHistory}
+          leftEarHistory={leftEarHistory}
+          rightEarHistory={rightEarHistory}
+          headAngleVariationHistory={headAngleVariationHistory}
+          headMovementHistory={headMovementHistory}
+          now={stateInfo.now}
+        />
+      )}
     </div>
   );
 };

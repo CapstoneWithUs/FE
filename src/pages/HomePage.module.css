@@ -1,14 +1,14 @@
-/* HomePage.module.css - Tablet Optimized */
+/* HomePage.module.css - 하단 네비게이션 제거 버전 */
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  min-height: calc(100vh - 120px);
-  background-color: #f8f9fa;
-  color: #333333;
-  padding: 2rem 2rem;
-  padding-bottom: 8rem;
+  min-height: calc(100vh - 80px); /* 하단 네비게이션 제거로 여백 조정 */
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  color: #212529;
+  padding: 2rem;
+  padding-bottom: 2rem; /* 하단 여백 줄임 */
 }
 
 .addButton {
@@ -16,28 +16,42 @@
   max-width: 20rem;
   margin-top: 1.5rem;
   margin-bottom: 2rem;
-  background-color: #ffffff;
-  color: #333333;
-  padding: 1rem 2rem;
-  border: 2px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 1rem;
-  min-height: 48px;
+  background: #FFFFFF;
+  color: #5B9BD5;
+  padding: 1.25rem 2rem;
+  border: 2px solid #5B9BD5;
+  border-radius: 1rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  min-height: 56px;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(91, 155, 213, 0.12);
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
 }
 
-.addButton:hover,
-.addButton:active {
-  background-color: #6366f1;
-  color: white;
-  border-color: #6366f1;
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.25);
-  transform: translateY(-1px);
+.addButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 50%, #B4D2F7 100%);
+  transition: left 0.4s ease;
+  z-index: -1;
+}
+
+.addButton:hover::before {
+  left: 0;
+}
+
+.addButton:hover {
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(91, 155, 213, 0.16);
 }
 
 .subjectList {
@@ -50,34 +64,50 @@
 
 .subjectButton {
   width: 100%;
-  background-color: #9ca3af;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 1.25rem 1.5rem;
-  font-size: 1.125rem;
+  background: #FFFFFF;
+  color: #4472C4;
+  border: 2px solid #8BB3E8;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   text-align: center;
-  min-height: 56px;
+  min-height: 64px;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(91, 155, 213, 0.08);
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
 }
 
-.subjectButton:hover,
-.subjectButton:active {
-  background-color: #6366f1;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+.subjectButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 50%, #B4D2F7 100%);
+  transition: left 0.4s ease;
+  z-index: -1;
+}
+
+.subjectButton:hover::before {
+  left: 0;
+}
+
+.subjectButton:hover {
+  color: #FFFFFF;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(91, 155, 213, 0.16);
 }
 
 /* 태블릿 세로 모드 (768px 이상) */
 @media (min-width: 768px) and (max-width: 1023px) {
   .container {
     padding: 3rem 3rem;
-    padding-bottom: 10rem;
+    padding-bottom: 3rem; /* 하단 여백 조정 */
   }
   
   .addButton {
@@ -102,7 +132,7 @@
 @media (min-width: 1024px) {
   .container {
     padding: 4rem 4rem;
-    padding-bottom: 12rem;
+    padding-bottom: 4rem; /* 하단 여백 조정 */
   }
   
   .addButton {

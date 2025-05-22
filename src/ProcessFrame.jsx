@@ -24,7 +24,8 @@ import { accumulateTime } from "./accumulateTime";
 
 //0: 준비 중, 1: 공부 중, 2: 자리 이탈, 3: 수면, 4: 다른 곳 응시
 const ProcessFrame = (
-  cv, canvas, landmarks, focal_length, w, h,
+  displayMode,
+  cv, canvas, canvasOverlay, landmarks, focal_length, w, h,
   blinkCounter,
   earLogger,
   headAngleVariation,
@@ -33,49 +34,59 @@ const ProcessFrame = (
   scoreLogger,
 ) => {
   scoreLogger(score);
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "blue";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
   // 현재 시간 가져오기
   const currentTime = performance.now();
   
-  // 세션이 활성화되어 있고 공부 중일 때만 시간 증가
-  if (window.isSessionActive && window.STATE != 0) {
+  if (window.STATE != 0) {
     accumulateTime(window.prvTime, currentTime, window.accTime, window.STATE, score);
   }
-  
-  // 세션이 활성화되지 않은 경우 대기 메시지 표시
-  if (!window.isSessionActive) {
-    ctx.fillStyle = "white";
-    ctx.font = "bold 36px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    
-    // 화면 중앙에 메시지 표시
-    ctx.fillText("측정 시작 버튼을 눌러주세요", canvas.width/2, canvas.height/2);
-    
-    // 재생 아이콘 그리기 (녹색 삼각형)
-    const triangleSize = 30;
-    const triangleY = canvas.height/2 - 50;
-    
-    ctx.fillStyle = "#10b981";
-    ctx.beginPath();
-    ctx.moveTo(canvas.width/2 - 20, triangleY - triangleSize);
-    ctx.lineTo(canvas.width/2 + 20, triangleY);
-    ctx.lineTo(canvas.width/2 - 20, triangleY + triangleSize);
-    ctx.closePath();
-    ctx.fill();
-    
+
+  // 얼굴이 감지되지 않으면 "자리 이탈" 상태로 변경
+  if (landmarks.length == 0) {
+    window.STATE = 2;
+    if (displayMode == "debug") {
+      drawDebug(canvas, [], null, null, null, null, null, null, w, h);
+      drawGaze(canvasOverlay, null, null, null, null, null);
+    }
     window.prvTime = currentTime;
     return;
   }
   
-  // 얼굴이 감지되지 않으면 "자리 이탈" 상태로 변경
-  if (landmarks.length == 0) {
-    window.STATE = 2;
-    
+  // 얼굴이 감지되면 "공부 중" 상태로 변경 (수면 중이 아니라면)
+  if (window.STATE !== 3) {
+    window.STATE = 1;
+  }
+  
+  let coordination = PNP_IDX.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
+  let [pitch, yaw, roll, x, y, z] = getPose(cv, ORIGINAL_POINTS, coordination, focal_length, w, h);
+  
+  const [Yaw, Pitch, Roll] = [yaw, pitch, roll].map(x => Math.round(x*180/Math.PI));
+  
+  let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
+  let REpts = RIGHT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
+
+  const left_ear = getEAR(LEpts, yaw, pitch);
+  const right_ear = getEAR(REpts, yaw, pitch);
+
+  if (displayMode == "debug") {
+    drawDebug(canvas, landmarks, Yaw, Pitch, Roll, Math.round(x), Math.round(y), Math.round(z), w, h);
+    drawGaze(canvasOverlay, x, y, z, yaw, pitch);
+  }
+
+  eyeClopen(landmarks, yaw, pitch, w, h, currentTime);
+  blinkCounter(left_ear, right_ear);
+  earLogger(left_ear, right_ear);
+  headAngleVariation(Yaw, Pitch, Roll);
+  headMovement(x, y, z);
+
+  // 현재 시간을 이전 시간으로 업데이트
+  window.prvTime = currentTime;
+};
+
+const drawDebug = (canvas, landmarks, Yaw, Pitch, Roll, x, y, z, w, h) => {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (window.STATE == 2) {
     // "자리를 비웠습니다" 메시지 표시
     ctx.fillStyle = "white";
     ctx.font = "bold 36px Arial";
@@ -101,84 +112,38 @@ const ProcessFrame = (
     ctx.fillStyle = "black";
     ctx.font = "bold 32px Arial";
     ctx.fillText("!", canvas.width/2, triangleY);
-    
-    window.prvTime = currentTime;
-    return;
   }
-  
-  // 얼굴이 감지되면 "공부 중" 상태로 변경 (수면 중이 아니라면)
-  if (window.STATE !== 3) {
-    window.STATE = 1;
-  }
-  
-  ctx.fillStyle = "red";
-  landmarks[0].forEach((point) => {
+  if (landmarks[0]) {
+    ctx.fillStyle = "red";
+    landmarks[0].forEach((point) => {
       ctx.beginPath();
       ctx.arc(point.x * w, point.y * h, 2, 0, 2 * Math.PI);
       ctx.fill();
-  });
-  
-  let coordination = PNP_IDX.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
-  let [pitch, yaw, roll, x, y, z] = getPose(cv, ORIGINAL_POINTS, coordination, focal_length, w, h);
-  
-  // 원 안에 데이터 표시
-  ctx.font = "16px Verdana";
+    });
+  }
   ctx.fillStyle = "red";
-  
-  const [Yaw, Pitch, Roll] = [yaw, pitch, roll].map(x => Math.round(x*180/Math.PI));
-  const xyz = [x, y, z].map(x => Math.round(x));
-  
-  ctx.textAlign = 'start';
-  ctx.fillText(`Angle(deg): ${Yaw},${Pitch},${Roll}`, 10, 20);
-  ctx.fillText(`Position(mm): ${xyz[0]},${xyz[1]},${xyz[2]}`, 10, 40);
-  
-  let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
-  let REpts = RIGHT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
-
-  const left_ear = getEAR(LEpts, yaw, pitch);
-  const right_ear = getEAR(REpts, yaw, pitch);
-
-  drawGaze(x, y, z, yaw, pitch);
-  eyeClopen(ctx, landmarks, yaw, pitch, w, h, currentTime);
-  blinkCounter(left_ear, right_ear);
-  earLogger(left_ear, right_ear);
-  headAngleVariation(Yaw, Pitch, Roll);
-  headMovement(x, y, z);
-
-  // 현재 시간을 이전 시간으로 업데이트
-  window.prvTime = currentTime;
+  ctx.textAlign = "end";
+  ctx.font = "bold 20px Arial";
+  if (Yaw != null && Pitch != null && Roll != null) {
+    ctx.fillText(`Angle(deg): ${Yaw},${Pitch},${Roll}`, 630, 30);
+  }
+  if (x != null && y != null && z != null) {
+    ctx.fillText(`Position(mm): ${x},${y},${z}`, 630, 50);
+  }
 };
 
-
-var gazeCanvas;
-
-const drawGaze = (tx, ty, tz, yaw, pitch) => {
-  if (gazeCanvas == undefined) {
-    gazeCanvas = document.createElement("canvas");
-    gazeCanvas.style.position = "fixed";
-    gazeCanvas.style.top = "0";
-    gazeCanvas.style.left = "0";
-    gazeCanvas.style.width = "100vw";
-    gazeCanvas.style.height = "100vh";
-    gazeCanvas.style.zIndex = "9999";
-    gazeCanvas.style.pointerEvents = "none";
-
-    gazeCanvas.width = window.innerWidth;
-    gazeCanvas.height = window.innerHeight;
-
-    document.body.appendChild(gazeCanvas);
-  }
-  const ctx = gazeCanvas.getContext("2d");
-  
+const drawGaze = (canvas, tx, ty, tz, yaw, pitch) => {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   let x = tx+Math.tan(yaw)*tz;
   let y = ty+Math.tan(pitch+10/180*Math.PI)*tz;
   if (x < -500 || x > 500 || y < -100) window.STATE = 4;
 
-  ctx.clearRect(0, 0, gazeCanvas.width, gazeCanvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "red";
   ctx.beginPath();
-  ctx.arc(x/25.4*PPI+gazeCanvas.width/2, y/25.4*PPI, 10, 0, 2*Math.PI);
+  ctx.arc(x/25.4*PPI+canvas.width/2, y/25.4*PPI, 10, 0, 2*Math.PI);
   ctx.fill();
 
   ctx.strokeStyle = "red";
@@ -188,13 +153,13 @@ const drawGaze = (tx, ty, tz, yaw, pitch) => {
   for (let i = 0; i <= 360; i += 5) {
     if (i == 0) {
       ctx.moveTo(
-        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+gazeCanvas.width/2,
+        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+canvas.width/2,
         (y+sz*Math.cos(i/180*Math.PI))/25.4*PPI
       );
     }
     else {
       ctx.lineTo(
-        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+gazeCanvas.width/2,
+        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+canvas.width/2,
         (y+sz*Math.cos(i/180*Math.PI))/25.4*PPI
       );
     }
@@ -202,7 +167,7 @@ const drawGaze = (tx, ty, tz, yaw, pitch) => {
   ctx.stroke();
 };
 
-const eyeClopen = (ctx, landmarks, yaw, pitch, w, h, currentTime) => {
+const eyeClopen = (landmarks, yaw, pitch, w, h, currentTime) => {
   const deltaTime = currentTime - window.prvTime;
 
   let LEpts = LEFT_EYE.map(i => [landmarks[0][i].x * w, landmarks[0][i].y * h]);
