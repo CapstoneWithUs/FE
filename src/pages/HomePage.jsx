@@ -1,5 +1,7 @@
+// HomePage.js 리팩토링 (CSS Modules 적용)
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import styles from './HomePage.module.css';
 
 const SUBJECTS_KEY = 'focusmate_subjects';
 
@@ -32,18 +34,18 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full min-h-screen bg-black text-white">
+    <div className={styles.container}>
       <button
-        className="mt-8 bg-gray-100 px-4 py-2 rounded font-bold hover:bg-gray-700 transition"
+        className={styles.addButton}
         onClick={() => navigate('/add-subject')}
       >
         과목 추가
       </button>
-      <div className="mt-8 w-full max-w-md flex flex-col gap-3">
+      <div className={styles.subjectList}>
         {subjects.map(subject => (
           <button
             key={subject}
-            className="w-full bg-gray-500 rounded px-4 py-3 text-lg font-semibold text-left hover:bg-cyan-700 transition"
+            className={styles.subjectButton}
             onClick={() => handleSubjectClick(subject)}
           >
             {subject}

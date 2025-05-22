@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './Header.module.css';
 
 // 오늘 날짜를 'MM. DD. (요일)' 형식으로 반환하는 함수
 const getToday = () => {
@@ -11,13 +12,13 @@ const getToday = () => {
 
 function Header() {
   return (
-    <header className="relative w-full h-16 md:h-20 bg-gray-100 shadow-sm flex items-center px-4 md:px-8 mb-6">
+    <header className={styles.header}>
       {/* 앱 이름: 좌측 상단 */}
-      <h1 className="font-pretendard">
+      <h1 className={styles.appTitle}>
         FocusMate
       </h1>
       {/* 날짜: 중앙 */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl md:text-3xl font-bold text-gray-800 select-none">
+      <div className={styles.dateDisplay}>
         {getToday()}
       </div>
     </header>
