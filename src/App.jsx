@@ -1,5 +1,6 @@
 import './App.css';
 import FaceDetection from './FaceDetection';
+import { useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import FocusTrackerPage from './pages/FocusTrackerPage';
 import HomePage from './pages/HomePage';
@@ -14,11 +15,15 @@ import AddSubjectPage from './pages/AddSubjectPage';
 import Header from './components/Header';
 import Navbar from './components/Navbar';
 import ShowStatistics from './pages/statistics/ShowStatistics';
+import { CanvasContext, CanvasOverlay } from './components/CanvasOverlay';
 
 function App() {
+  const canvasRef = useRef(null);
   return (
-    <BrowserRouter>
-      <Header />
+    <CanvasContext.Provider value={canvasRef}> 
+      <BrowserRouter>
+        <Header />
+        <CanvasOverlay canvasRef={canvasRef} page="/focusTrackerPage" />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/landingPage" element={<LandingPage />} />
@@ -33,8 +38,9 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/statistics" element={<ShowStatistics />} />
         </Routes>
-      <Navbar />
-    </BrowserRouter>
+        <Navbar />
+      </BrowserRouter>
+    </CanvasContext.Provider>
   );
 }
 

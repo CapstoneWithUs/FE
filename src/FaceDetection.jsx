@@ -24,6 +24,8 @@ import { useHeadAngleVariation } from "./headAngleVariation";
 import { useHeadMovement } from "./headMovement";
 import { useScoreLogger } from "./useScoreLogger";
 
+import { useCanvas } from "./components/CanvasOverlay";
+
 const LoadCV = async () => {
   if (typeof cv === "undefined") {
     return new Promise((resolve) => {
@@ -61,6 +63,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const canvasOverlayRef = useCanvas();
   const [faceLandmarker, setFaceLandmarker] = useState(null);
   const faceLandmarkerRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -258,6 +261,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       }
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      const canvasOverlay = canvasOverlayRef.current;
 
       if (typeof window.cv === "undefined" || !faceLandmarkerRef.current || video.readyState <= 2) {
         requestAnimationFrame(detectFaces);
@@ -278,7 +282,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
 
       // ProcessFrame 함수 직접 호출
       ProcessFrame(
-        window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480,
+        window.cv, canvas, canvasOverlay, faces.faceLandmarks, focalRef.current, 640, 480,
         blinkCounter,
         earLogger,
         headAngleVariation,
