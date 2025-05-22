@@ -12,18 +12,12 @@ export const StartSessionButton = ({ onStartSession }) => (
   <button 
     onClick={onStartSession}
     style={{
-      background: "#10b981",
-      color: "white",
-      padding: "0.75rem 1.5rem",
-      borderRadius: "0.5rem",
-      fontWeight: "bold",
-      border: "none",
-      cursor: "pointer",
-      marginTop: "1rem",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+      ...styles.sessionButton,
+      ...styles.startButton
     }}
+    className="session-button"
   >
-    <Play size={18} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
+    <Play size={18} />
     측정 시작
   </button>
 );
@@ -32,20 +26,56 @@ export const EndSessionButton = ({ onEndSession }) => (
   <button 
     onClick={onEndSession}
     style={{
-      background: "#ef4444",
-      color: "white",
-      padding: "0.75rem 1.5rem",
-      borderRadius: "0.5rem",
-      fontWeight: "bold",
-      border: "none",
-      cursor: "pointer",
-      marginTop: "1rem",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+      ...styles.sessionButton,
+      ...styles.endButton
     }}
+    className="session-button"
   >
-    <Clock size={18} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
+    <Clock size={18} />
     세션 종료 및 저장
   </button>
+);
+
+// 모드 선택 컴포넌트 - 왼쪽 세로 배치
+export const ModeSelector = ({ displayMode, onModeChange }) => {
+  const modes = [
+    { key: 'webcam', label: '웹캠 화면' },
+    { key: 'debug', label: '디버깅 화면' },
+    { key: 'pip', label: 'PIP 모드' },
+    { key: 'faceOff', label: '얼굴 화면 OFF' }
+  ];
+
+  return (
+    <div style={styles.modeSelector}>
+      <div style={styles.modeSelectorTitle}>화면 모드</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        {modes.map(mode => (
+          <button
+            key={mode.key}
+            onClick={() => onModeChange(mode.key)}
+            style={{
+              ...styles.modeButton,
+              ...(displayMode === mode.key ? styles.modeButtonActive : {})
+            }}
+            className="mode-button"
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// 세션 컨트롤 컴포넌트 - 상단 배치
+export const SessionControls = ({ sessionActive, onStartSession, onEndSession }) => (
+  <div style={styles.sessionControls}>
+    {!sessionActive ? (
+      <StartSessionButton onStartSession={onStartSession} />
+    ) : (
+      <EndSessionButton onEndSession={onEndSession} />
+    )}
+  </div>
 );
 
 export const formatTime = (ms) => {
@@ -76,8 +106,8 @@ export const Header = () => (
 export const LoadingScreen = () => (
   <div style={styles.loadingContainer}>
     <div style={styles.spinner}></div>
-    <p style={{ fontSize: "1.25rem", marginTop: "1rem" }}>시스템 초기화 중...</p>
-    <p style={{ fontSize: "0.875rem", color: "rgba(255, 255, 255, 0.6)", marginTop: "0.5rem" }}>
+    <p style={{ fontSize: "1.25rem", marginTop: "1rem", color: "#4472C4" }}>시스템 초기화 중...</p>
+    <p style={{ fontSize: "0.875rem", color: "#6C757D", marginTop: "0.5rem" }}>
       <Cpu size={16} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
       얼굴 랜드마크 모델 및 OpenCV 로딩 중
     </p>
@@ -91,11 +121,11 @@ export const TimeBadge = ({ position, studyTime }) => {
     
   return (
     <div style={{...styles.badge, ...positionStyle}}>
-      <Clock size={18} color="#ff0000" />
+      <Clock size={18} color="#FFFFFF" />
       <span style={{ 
         fontFamily: "monospace", 
         fontSize: "1.25rem", 
-        color: "#ff0000", 
+        color: "#FFFFFF", 
         fontWeight: "bold" 
       }}>{formatTime(studyTime)}</span>
     </div>
@@ -116,7 +146,7 @@ export const StateBadge = ({ state }) => (
 
 export const AwayMessage = () => (
   <div style={styles.awayMessageContainer}>
-    <AlertTriangle size={36} color="#ffcc00" />
+    <AlertTriangle size={36} color="#FFFFFF" />
     <p style={styles.awayMessageText}>자리를 비웠습니다</p>
   </div>
 );
@@ -131,16 +161,16 @@ export const VideoPanel = ({ videoRef, studyTime, state, subject }) => (
         position: 'absolute',
         top: '40px',
         left: '1rem',
-        background: 'rgba(0, 0, 0, 0.7)',
-        color: 'white',
+        background: 'linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)',
+        color: '#FFFFFF',
         padding: '0.5rem 0.75rem',
         borderRadius: '0.5rem',
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 4px 12px rgba(91, 155, 213, 0.3)',
         backdropFilter: 'blur(4px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
         zIndex: 10
       }}>
         <span style={{ fontSize: '14px', fontWeight: 'bold' }}>
@@ -178,10 +208,10 @@ export const PIPPanel = ({ videoRef, canvasRef, studyTime, state, subject }) => 
       position: 'relative',
       width: '240px',
       height: '180px',
-      border: '2px solid rgba(255, 255, 255, 0.3)',
+      border: '2px solid #B4D2F7',
       borderRadius: '0.5rem',
       overflow: 'hidden',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+      boxShadow: '0 4px 16px rgba(91, 155, 213, 0.2)'
     }}>
       <video 
         ref={videoRef} 
@@ -198,8 +228,8 @@ export const PIPPanel = ({ videoRef, canvasRef, studyTime, state, subject }) => 
         position: 'absolute',
         top: '0.5rem',
         left: '0.5rem',
-        background: 'rgba(0, 0, 0, 0.7)',
-        color: 'white',
+        background: 'linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)',
+        color: '#FFFFFF',
         padding: '0.25rem 0.5rem',
         borderRadius: '0.25rem',
         fontSize: '12px',
@@ -213,8 +243,8 @@ export const PIPPanel = ({ videoRef, canvasRef, studyTime, state, subject }) => 
           position: 'absolute',
           bottom: '0.5rem',
           left: '0.5rem',
-          background: 'rgba(0, 0, 0, 0.7)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)',
+          color: '#FFFFFF',
           padding: '0.25rem 0.5rem',
           borderRadius: '0.25rem',
           fontSize: '10px',
@@ -229,8 +259,8 @@ export const PIPPanel = ({ videoRef, canvasRef, studyTime, state, subject }) => 
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          background: 'rgba(255, 204, 0, 0.9)',
-          color: 'black',
+          background: 'rgba(245, 158, 11, 0.95)',
+          color: '#FFFFFF',
           padding: '0.25rem 0.5rem',
           borderRadius: '0.25rem',
           fontSize: '12px',
@@ -251,16 +281,17 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
     alignItems: 'center',
     gap: '2rem',
     padding: '2rem',
-    background: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: '1rem',
-    backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    minWidth: '400px'
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%)',
+    borderRadius: '1.5rem',
+    backdropFilter: 'blur(20px)',
+    border: '2px solid #B4D2F7',
+    minWidth: '400px',
+    boxShadow: '0 8px 32px rgba(91, 155, 213, 0.2)'
   }}>
     {/* 과목명 표시 */}
     <div style={{
-      background: 'rgba(59, 130, 246, 0.2)',
-      border: '2px solid rgba(59, 130, 246, 0.5)',
+      background: 'linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%)',
+      border: '2px solid rgba(255, 255, 255, 0.3)',
       borderRadius: '1rem',
       padding: '1rem 2rem',
       textAlign: 'center'
@@ -269,14 +300,14 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
         margin: 0,
         fontSize: '1.5rem',
         fontWeight: 'bold',
-        color: '#bfdbfe'
+        color: '#FFFFFF'
       }}>
         {subject || 'Blank'}
       </h2>
       <p style={{
         margin: '0.5rem 0 0 0',
         fontSize: '0.875rem',
-        color: 'rgba(255, 255, 255, 0.7)'
+        color: 'rgba(255, 255, 255, 0.8)'
       }}>
         현재 과목
       </p>
@@ -284,8 +315,8 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
 
     {/* 큰 타이머 */}
     <div style={{
-      background: 'rgba(16, 185, 129, 0.2)',
-      border: '2px solid rgba(16, 185, 129, 0.5)',
+      background: 'linear-gradient(135deg, rgba(91, 155, 213, 0.1) 0%, rgba(139, 179, 232, 0.1) 100%)',
+      border: '2px solid #B4D2F7',
       borderRadius: '1rem',
       padding: '2rem',
       textAlign: 'center',
@@ -298,12 +329,12 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
         gap: '1rem',
         marginBottom: '0.5rem'
       }}>
-        <Clock size={32} color="#10b981" />
+        <Clock size={32} color="#5B9BD5" />
         <span style={{
           fontFamily: 'monospace',
           fontSize: '3rem',
           fontWeight: 'bold',
-          color: '#10b981'
+          color: '#4472C4'
         }}>
           {formatTime(studyTime)}
         </span>
@@ -311,7 +342,7 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
       <p style={{
         margin: 0,
         fontSize: '1rem',
-        color: 'rgba(255, 255, 255, 0.7)'
+        color: '#6C757D'
       }}>
         총 공부 시간
       </p>
@@ -319,8 +350,8 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
 
     {/* 현재 상태 */}
     <div style={{
-      background: 'rgba(255, 255, 255, 0.1)',
-      border: '2px solid rgba(255, 255, 255, 0.2)',
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 249, 250, 0.6) 100%)',
+      border: '2px solid #E9ECEF',
       borderRadius: '1rem',
       padding: '1.5rem',
       textAlign: 'center',
@@ -346,7 +377,7 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
         <span style={{
           fontSize: '1.5rem',
           fontWeight: 'bold',
-          color: 'white'
+          color: '#4472C4'
         }}>
           {styles.getStateText(state)}
         </span>
@@ -354,7 +385,7 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
       <p style={{
         margin: 0,
         fontSize: '0.875rem',
-        color: 'rgba(255, 255, 255, 0.7)'
+        color: '#6C757D'
       }}>
         현재 상태
       </p>
@@ -362,8 +393,8 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
 
     {/* 안내 메시지 */}
     <div style={{
-      background: 'rgba(107, 114, 128, 0.2)',
-      border: '1px solid rgba(107, 114, 128, 0.3)',
+      background: 'rgba(139, 179, 232, 0.1)',
+      border: '1px solid #B4D2F7',
       borderRadius: '0.5rem',
       padding: '1rem',
       textAlign: 'center'
@@ -371,7 +402,7 @@ export const FaceOffPanel = ({ studyTime, state, subject }) => (
       <Monitor size={20} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
       <span style={{
         fontSize: '0.875rem',
-        color: 'rgba(255, 255, 255, 0.8)'
+        color: '#4472C4'
       }}>
         얼굴 화면이 숨겨져 있지만 측정은 계속 진행됩니다
       </span>
@@ -404,10 +435,10 @@ export const StatsCards = ({ studyTime, sleepTime }) => (
   <div style={styles.statsContainer}>
     <div style={styles.statCard}>
       <h3 style={styles.statHeader}>
-        <Clock size={18} color="#4ade80" />
+        <Clock size={18} color="#5B9BD5" />
         공부 시간
       </h3>
-      <p style={{ ...styles.timeValue, color: "#4ade80" }}>{formatTime(studyTime)}</p>
+      <p style={{ ...styles.timeValue, color: "#4472C4" }}>{formatTime(studyTime)}</p>
     </div>
     <div style={styles.statCard}>
       <h3 style={styles.statHeader}>
@@ -422,16 +453,16 @@ export const StatsCards = ({ studyTime, sleepTime }) => (
 export const UserGuide = () => (
   <div style={styles.guideContainer}>
     <h3 style={styles.guideHeader}>
-      <ActivitySquare size={20} color="#38bdf8" />
+      <ActivitySquare size={20} color="#5B9BD5" />
       사용 가이드
     </h3>
     <ul style={styles.guideList}>
-      <li style={styles.guideItem}>먼저 "측정 시작" 버튼을 눌러 측정을 시작하세요.</li>
-      <li style={styles.guideItem}>웹캠이 얼굴을 인식하면 자동으로 시선 추적이 시작됩니다.</li>
-      <li style={styles.guideItem}>눈을 5초 이상 감으면 수면 모드로 전환되며 공부 시간이 측정되지 않습니다.</li>
-      <li style={styles.guideItem}>시선이 화면을 벗어나면 "다른 곳 응시" 상태로 변경됩니다.</li>
-      <li style={styles.guideItem}>초점 거리를 조절하여 시선 추적의 정확도를 향상시킬 수 있습니다.</li>
-      <li style={styles.guideItem}>"세션 종료 및 저장" 버튼을 누르면 데이터가 저장되고 통계 페이지로 이동합니다.</li>
+      <li style={styles.guideItem} className="guideItem">먼저 "측정 시작" 버튼을 눌러 측정을 시작하세요.</li>
+      <li style={styles.guideItem} className="guideItem">웹캠이 얼굴을 인식하면 자동으로 시선 추적이 시작됩니다.</li>
+      <li style={styles.guideItem} className="guideItem">눈을 5초 이상 감으면 수면 모드로 전환되며 공부 시간이 측정되지 않습니다.</li>
+      <li style={styles.guideItem} className="guideItem">시선이 화면을 벗어나면 "다른 곳 응시" 상태로 변경됩니다.</li>
+      <li style={styles.guideItem} className="guideItem">초점 거리를 조절하여 시선 추적의 정확도를 향상시킬 수 있습니다.</li>
+      <li style={styles.guideItem} className="guideItem">"세션 종료 및 저장" 버튼을 누르면 데이터가 저장되고 통계 페이지로 이동합니다.</li>
     </ul>
   </div>
 );
@@ -449,44 +480,47 @@ export const ScoreGraph = ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+    marginTop: "2rem"
   }}>
-    <p>Score: {(calculateFocusScore(
-      window.STATE,
-      getTimeDecaySum(leftBlinkHistory, now),
-      getTimeDecaySum(rightBlinkHistory, now),
-      getTimeDecayAvg(leftEarHistory, now),
-      getTimeDecayAvg(rightEarHistory, now),
-      getTimeDecayAvg(headAngleVariationHistory, now),
-      getTimeDecayAvg(headMovementHistory, now),
-    )*100).toFixed(2)}</p>
+    <p style={{ color: "#4472C4", fontSize: "1.1rem", fontWeight: "600" }}>
+      Score: {(calculateFocusScore(
+        window.STATE,
+        getTimeDecaySum(leftBlinkHistory, now),
+        getTimeDecaySum(rightBlinkHistory, now),
+        getTimeDecayAvg(leftEarHistory, now),
+        getTimeDecayAvg(rightEarHistory, now),
+        getTimeDecayAvg(headAngleVariationHistory, now),
+        getTimeDecayAvg(headMovementHistory, now),
+      )*100).toFixed(2)}
+    </p>
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={leftBlinkHistory}></TimeLineChart>
-        <p>초당 눈 깜빡임(왼쪽): {getTimeDecaySum(leftBlinkHistory, now).toFixed(2)}</p>
+        <p style={{ color: "#4472C4", fontSize: "0.9rem" }}>초당 눈 깜빡임(왼쪽): {getTimeDecaySum(leftBlinkHistory, now).toFixed(2)}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={rightBlinkHistory}></TimeLineChart>
-        <p>초당 눈 깜빡임(오른쪽): {getTimeDecaySum(rightBlinkHistory, now).toFixed(2)}</p>
+        <p style={{ color: "#4472C4", fontSize: "0.9rem" }}>초당 눈 깜빡임(오른쪽): {getTimeDecaySum(rightBlinkHistory, now).toFixed(2)}</p>
       </div>
     </div>
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={leftEarHistory}></TimeLineChart>
-        <p>EAR (왼쪽): {getTimeDecayAvg(leftEarHistory, now).toFixed(2)}</p>
+        <p style={{ color: "#4472C4", fontSize: "0.9rem" }}>EAR (왼쪽): {getTimeDecayAvg(leftEarHistory, now).toFixed(2)}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={rightEarHistory}></TimeLineChart>
-        <p>EAR (오른쪽): {getTimeDecayAvg(rightEarHistory, now).toFixed(2)}</p>
+        <p style={{ color: "#4472C4", fontSize: "0.9rem" }}>EAR (오른쪽): {getTimeDecayAvg(rightEarHistory, now).toFixed(2)}</p>
       </div>
     </div>
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={headAngleVariationHistory}></TimeLineChart>
-        <p>머리 각속력 (deg/ms): {getTimeDecayAvg(headAngleVariationHistory, now).toFixed(2)}</p>
+        <p style={{ color: "#4472C4", fontSize: "0.9rem" }}>머리 각속력 (deg/ms): {getTimeDecayAvg(headAngleVariationHistory, now).toFixed(2)}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TimeLineChart data={headMovementHistory}></TimeLineChart>
-        <p>머리 속력 (m/s): {getTimeDecayAvg(headMovementHistory, now).toFixed(2)}</p>
+        <p style={{ color: "#4472C4", fontSize: "0.9rem" }}>머리 속력 (m/s): {getTimeDecayAvg(headMovementHistory, now).toFixed(2)}</p>
       </div>
     </div>
   </div>

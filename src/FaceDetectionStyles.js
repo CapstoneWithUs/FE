@@ -3,71 +3,129 @@ export const styles = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
-    color: "white",
-    padding: "2rem",
+    background: "linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%)",
+    color: "#212529",
+    padding: "1rem",
     fontFamily: "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     position: "relative",
     overflow: "hidden"
   },
   
   header: {
-    fontSize: "2.5rem",
-    fontWeight: "800",
-    marginBottom: "2rem",
+    fontSize: "2rem",
+    fontWeight: "700",
+    marginBottom: "1rem",
     textAlign: "center",
-    background: "linear-gradient(135deg, #38bdf8, #4ade80, #a78bfa)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    backgroundClip: "text",
-    textShadow: "0 4px 20px rgba(56, 189, 248, 0.3)",
-    letterSpacing: "-0.025em",
-    animation: "headerGlow 3s ease-in-out infinite"
+    color: "#5B9BD5",
+    textShadow: "0 2px 4px rgba(91, 155, 213, 0.2)",
+    letterSpacing: "-0.025em"
+  },
+
+  // 모드 선택 버튼들을 왼쪽 세로 배치
+  modeSelector: {
+    position: "fixed",
+    left: "1rem",
+    top: "50%",
+    transform: "translateY(-50%)",
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+    zIndex: 100,
+    background: "rgba(255, 255, 255, 0.95)",
+    padding: "1rem",
+    borderRadius: "1rem",
+    border: "2px solid #B4D2F7",
+    boxShadow: "0 4px 16px rgba(91, 155, 213, 0.15)",
+    backdropFilter: "blur(10px)"
+  },
+
+  modeSelectorTitle: {
+    fontSize: "0.875rem",
+    fontWeight: "600",
+    color: "#4472C4",
+    marginBottom: "0.5rem",
+    textAlign: "center",
+    whiteSpace: "nowrap"
+  },
+
+  modeButton: {
+    padding: "0.75rem 1rem",
+    border: "2px solid #8BB3E8",
+    borderRadius: "0.75rem",
+    background: "#FFFFFF",
+    color: "#5B9BD5",
+    fontSize: "0.75rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    textAlign: "center",
+    minWidth: "80px",
+    whiteSpace: "nowrap"
+  },
+
+  modeButtonActive: {
+    background: "linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%)",
+    color: "#FFFFFF",
+    borderColor: "#5B9BD5",
+    transform: "scale(1.05)"
+  },
+
+  // 세션 컨트롤 버튼들을 상단으로 이동
+  sessionControls: {
+    display: "flex",
+    gap: "1rem",
+    marginBottom: "1.5rem",
+    zIndex: 10
+  },
+
+  sessionButton: {
+    padding: "0.875rem 1.5rem",
+    borderRadius: "0.75rem",
+    fontWeight: "600",
+    fontSize: "1rem",
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem"
+  },
+
+  startButton: {
+    background: "linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%)",
+    color: "#FFFFFF"
+  },
+
+  endButton: {
+    background: "linear-gradient(135deg, #4472C4 0%, #5B9BD5 100%)",
+    color: "#FFFFFF"
   },
   
   mainContent: {
     display: "flex",
-    flexDirection: "row",
-    alignItems: "flex-start",
+    flexDirection: "column",
+    alignItems: "center",
     justifyContent: "center",
-    gap: "2.5rem",
     width: "100%",
-    maxWidth: "1600px",
+    maxWidth: "1200px",
     position: "relative",
-    zIndex: 10
-  },
-  
-  panel: {
-    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)",
-    borderRadius: "1.5rem",
-    backdropFilter: "blur(20px)",
-    boxShadow: `
-      0 25px 50px -12px rgba(0, 0, 0, 0.25),
-      0 0 0 1px rgba(255, 255, 255, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
-    overflow: "hidden",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    padding: "1.5rem",
-    transition: "all 0.3s ease"
+    zIndex: 10,
+    marginLeft: "120px" // 왼쪽 모드 버튼 공간 확보
   },
   
   videoContainer: {
     position: "relative",
     width: "690px",
     height: "530px",
-    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)",
+    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(233, 236, 239, 0.8) 100%)",
     borderRadius: "1.5rem",
     backdropFilter: "blur(20px)",
-    boxShadow: `
-      0 25px 50px -12px rgba(0, 0, 0, 0.25),
-      0 0 0 1px rgba(255, 255, 255, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
+    boxShadow: "0 8px 32px rgba(91, 155, 213, 0.2)",
     overflow: "hidden",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
+    border: "2px solid #B4D2F7",
     padding: "1.5rem",
     transition: "all 0.3s ease"
   },
@@ -77,14 +135,10 @@ export const styles = {
     height: "480px",
     position: "absolute",
     top: 20,
-    lef: 0,
+    left: 25,
     borderRadius: "1rem",
-    border: "2px solid rgba(255, 255, 255, 0.1)",
-    boxShadow: `
-      0 20px 25px -5px rgba(0, 0, 0, 0.2),
-      0 10px 10px -5px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
+    border: "2px solid rgba(91, 155, 213, 0.3)",
+    boxShadow: "0 4px 16px rgba(91, 155, 213, 0.15)",
     objectFit: "cover"
   },
   
@@ -93,49 +147,37 @@ export const styles = {
     height: "480px",
     position: "absolute",
     top: 20,
-    lef: 0,
+    left: 25,
     borderRadius: "1rem",
-    border: "2px solid rgba(255, 255, 255, 0.1)",
-    boxShadow: `
-      0 20px 25px -5px rgba(0, 0, 0, 0.2),
-      0 10px 10px -5px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `
+    border: "2px solid rgba(91, 155, 213, 0.3)",
+    boxShadow: "0 4px 16px rgba(91, 155, 213, 0.15)"
   },
   
   badge: {
     position: "absolute",
-    background: "linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)",
+    background: "linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)",
     padding: "0.75rem 1rem",
     borderRadius: "0.75rem",
     display: "flex",
     alignItems: "center",
     gap: "0.75rem",
-    boxShadow: `
-      0 10px 15px -3px rgba(0, 0, 0, 0.3),
-      0 4px 6px -2px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
+    boxShadow: "0 4px 12px rgba(91, 155, 213, 0.3)",
     backdropFilter: "blur(10px)",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    zIndex: 20,
-    animation: "badgeFloat 3s ease-in-out infinite"
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    color: "#FFFFFF",
+    zIndex: 20
   },
   
   stateBadge: {
     position: "absolute",
     top: "1rem",
     left: "1rem",
-    background: "linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)",
+    background: "linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)",
     padding: "0.75rem",
     borderRadius: "0.75rem",
     backdropFilter: "blur(10px)",
-    boxShadow: `
-      0 10px 15px -3px rgba(0, 0, 0, 0.3),
-      0 4px 6px -2px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
-    border: "1px solid rgba(255, 255, 255, 0.1)",
+    boxShadow: "0 4px 12px rgba(91, 155, 213, 0.3)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
     zIndex: 20
   },
 
@@ -149,16 +191,12 @@ export const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    background: "linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%)",
+    background: "linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)",
     padding: "2rem 2.5rem",
     borderRadius: "1.5rem",
     backdropFilter: "blur(15px)",
-    boxShadow: `
-      0 25px 50px -12px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(255, 255, 255, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
-    border: "1px solid rgba(255, 255, 255, 0.2)",
+    boxShadow: "0 8px 32px rgba(91, 155, 213, 0.4)",
+    border: "2px solid rgba(255, 255, 255, 0.3)",
     zIndex: 30,
     animation: "messageFloat 2s ease-in-out infinite"
   },
@@ -167,8 +205,8 @@ export const styles = {
     fontWeight: "700",
     fontSize: "1.75rem",
     marginTop: "1rem",
-    color: "white",
-    textShadow: "0 4px 8px rgba(0, 0, 0, 0.5)",
+    color: "#FFFFFF",
+    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
     textAlign: "center",
     letterSpacing: "0.025em"
   },
@@ -180,7 +218,7 @@ export const styles = {
     padding: "0.75rem 1rem",
     borderRadius: "9999px",
     fontWeight: "700",
-    color: "white",
+    color: "#FFFFFF",
     textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
     boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.2)"
   },
@@ -190,19 +228,16 @@ export const styles = {
     gridTemplateColumns: "1fr 1fr",
     gap: "1.25rem",
     width: "100%",
-    marginTop: "1.5rem"
+    marginTop: "1.5rem",
+    maxWidth: "600px"
   },
 
   statCard: {
-    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)",
+    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%)",
     padding: "1.25rem",
     borderRadius: "1rem",
-    boxShadow: `
-      0 10px 15px -3px rgba(0, 0, 0, 0.2),
-      0 4px 6px -2px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
-    border: "1px solid rgba(255, 255, 255, 0.1)",
+    boxShadow: "0 4px 16px rgba(91, 155, 213, 0.15)",
+    border: "2px solid #B4D2F7",
     backdropFilter: "blur(10px)",
     transition: "all 0.3s ease"
   },
@@ -214,29 +249,26 @@ export const styles = {
     display: "flex",
     alignItems: "center",
     gap: "0.75rem",
-    color: "rgba(255, 255, 255, 0.9)",
-    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)"
+    color: "#4472C4",
+    textShadow: "0 1px 2px rgba(68, 114, 196, 0.1)"
   },
 
   timeValue: {
     fontSize: "1.875rem",
     fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
     fontWeight: "700",
-    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)"
+    textShadow: "0 2px 4px rgba(91, 155, 213, 0.2)"
   },
 
   sliderContainer: {
     marginTop: "1.5rem",
     width: "100%",
+    maxWidth: "600px",
     padding: "1rem 1.25rem",
-    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)",
+    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%)",
     borderRadius: "1rem",
-    boxShadow: `
-      0 10px 15px -3px rgba(0, 0, 0, 0.2),
-      0 4px 6px -2px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
-    border: "1px solid rgba(255, 255, 255, 0.1)",
+    boxShadow: "0 4px 16px rgba(91, 155, 213, 0.15)",
+    border: "2px solid #B4D2F7",
     backdropFilter: "blur(10px)"
   },
 
@@ -252,45 +284,42 @@ export const styles = {
     alignItems: "center",
     gap: "0.75rem",
     fontSize: "0.9rem",
-    color: "rgba(255, 255, 255, 0.9)",
-    fontWeight: "500",
-    textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)"
+    color: "#4472C4",
+    fontWeight: "600",
+    textShadow: "0 1px 2px rgba(68, 114, 196, 0.1)"
   },
 
   sliderValue: {
     fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(91, 155, 213, 0.1)",
     padding: "0.375rem 0.75rem",
     borderRadius: "0.5rem",
     fontSize: "0.875rem",
     fontWeight: "600",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    backdropFilter: "blur(5px)"
+    border: "1px solid #B4D2F7",
+    backdropFilter: "blur(5px)",
+    color: "#4472C4"
   },
 
   slider: {
     width: "100%",
     height: "0.75rem",
-    backgroundImage: "linear-gradient(to right, #3b82f6, #8b5cf6, #4ade80)",
+    backgroundImage: "linear-gradient(to right, #5B9BD5, #8BB3E8, #B4D2F7)",
     borderRadius: "0.375rem",
     appearance: "none",
     cursor: "pointer",
-    boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.2)"
+    boxShadow: "inset 0 1px 2px rgba(91, 155, 213, 0.2)"
   },
 
   guideContainer: {
-    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)",
+    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%)",
     borderRadius: "1.5rem",
     backdropFilter: "blur(20px)",
-    boxShadow: `
-      0 25px 50px -12px rgba(0, 0, 0, 0.25),
-      0 0 0 1px rgba(255, 255, 255, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
+    boxShadow: "0 8px 32px rgba(91, 155, 213, 0.2)",
     overflow: "hidden",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
+    border: "2px solid #B4D2F7",
     padding: "1.5rem",
-    marginTop: "2.5rem",
+    marginTop: "2rem",
     maxWidth: "900px",
     width: "100%",
     animation: "guideSlideIn 1s ease-out 0.5s both"
@@ -303,14 +332,14 @@ export const styles = {
     display: "flex",
     alignItems: "center",
     gap: "0.75rem",
-    color: "#f8fafc",
-    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)"
+    color: "#4472C4",
+    textShadow: "0 2px 4px rgba(68, 114, 196, 0.1)"
   },
 
   guideList: {
     paddingLeft: "1.75rem",
     listStyleType: "none",
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "#495057",
     position: "relative"
   },
 
@@ -319,7 +348,7 @@ export const styles = {
     lineHeight: "1.6",
     position: "relative",
     paddingLeft: "1.5rem",
-    textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)",
+    textShadow: "0 1px 2px rgba(73, 80, 87, 0.1)",
     fontSize: "0.95rem"
   },
 
@@ -330,16 +359,12 @@ export const styles = {
     justifyContent: "center",
     height: "500px",
     width: "100%",
-    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)",
+    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%)",
     borderRadius: "1.5rem",
     backdropFilter: "blur(20px)",
-    boxShadow: `
-      0 25px 50px -12px rgba(0, 0, 0, 0.25),
-      0 0 0 1px rgba(255, 255, 255, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
+    boxShadow: "0 8px 32px rgba(91, 155, 213, 0.2)",
     overflow: "hidden",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
+    border: "2px solid #B4D2F7",
     padding: "1.5rem"
   },
 
@@ -350,35 +375,19 @@ export const styles = {
     margin: "2rem",
     fontSize: "10px",
     position: "relative",
-    borderTop: "0.4em solid rgba(255, 255, 255, 0.2)",
-    borderRight: "0.4em solid rgba(255, 255, 255, 0.2)",
-    borderBottom: "0.4em solid rgba(255, 255, 255, 0.2)",
-    borderLeft: "0.4em solid #38bdf8",
+    borderTop: "0.4em solid rgba(91, 155, 213, 0.2)",
+    borderRight: "0.4em solid rgba(91, 155, 213, 0.2)",
+    borderBottom: "0.4em solid rgba(91, 155, 213, 0.2)",
+    borderLeft: "0.4em solid #5B9BD5",
     transform: "translateZ(0)",
     animation: "spinner 1.1s infinite linear",
-    filter: "drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))"
+    filter: "drop-shadow(0 4px 8px rgba(91, 155, 213, 0.3))"
   },
 
   globalCss: `
     @keyframes spinner {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
-    }
-    
-    @keyframes headerGlow {
-      0%, 100% { 
-        textShadow: 0 4px 20px rgba(56, 189, 248, 0.3);
-        filter: brightness(1);
-      }
-      50% { 
-        textShadow: 0 4px 30px rgba(56, 189, 248, 0.6);
-        filter: brightness(1.1);
-      }
-    }
-    
-    @keyframes badgeFloat {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-2px); }
     }
     
     @keyframes messageFloat {
@@ -403,26 +412,26 @@ export const styles = {
     }
     
     ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(91, 155, 213, 0.1);
       border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(91, 155, 213, 0.3);
       border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(91, 155, 213, 0.5);
     }
     
     /* Guide list custom bullets */
     .guideItem::before {
-      content: '✨';
+      content: '📚';
       position: absolute;
       left: -1.5rem;
-      color: #4ade80;
-      filter: drop-shadow(0 0 4px rgba(74, 222, 128, 0.5));
+      color: #5B9BD5;
+      filter: drop-shadow(0 0 4px rgba(91, 155, 213, 0.5));
     }
     
     input[type=range]::-webkit-slider-thumb {
@@ -431,11 +440,11 @@ export const styles = {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+      background: linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%);
       cursor: pointer;
       box-shadow: 
-        0 4px 8px rgba(0, 0, 0, 0.3),
-        0 0 0 2px rgba(59, 130, 246, 0.5),
+        0 4px 8px rgba(91, 155, 213, 0.3),
+        0 0 0 2px rgba(255, 255, 255, 0.8),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
       transition: all 0.2s ease;
     }
@@ -443,8 +452,8 @@ export const styles = {
     input[type=range]::-webkit-slider-thumb:hover {
       transform: scale(1.1);
       box-shadow: 
-        0 6px 12px rgba(0, 0, 0, 0.4),
-        0 0 0 3px rgba(59, 130, 246, 0.7),
+        0 6px 12px rgba(91, 155, 213, 0.4),
+        0 0 0 3px rgba(255, 255, 255, 0.9),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
     
@@ -452,11 +461,11 @@ export const styles = {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+      background: linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%);
       cursor: pointer;
       box-shadow: 
-        0 4px 8px rgba(0, 0, 0, 0.3),
-        0 0 0 2px rgba(59, 130, 246, 0.5);
+        0 4px 8px rgba(91, 155, 213, 0.3),
+        0 0 0 2px rgba(255, 255, 255, 0.8);
       border: none;
       transition: all 0.2s ease;
     }
@@ -464,13 +473,25 @@ export const styles = {
     input[type=range]::-moz-range-thumb:hover {
       transform: scale(1.1);
     }
+
+    .mode-button:hover {
+      background: linear-gradient(135deg, #8BB3E8 0%, #B4D2F7 100%) !important;
+      color: #4472C4 !important;
+      transform: translateX(2px);
+      box-shadow: 0 4px 12px rgba(91, 155, 213, 0.2);
+    }
+
+    .session-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(91, 155, 213, 0.3);
+    }
   `,
 
   getStateColor: (state) => {
     switch(state) {
-      case 0: return "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"; // blue - Preparing
-      case 1: return "linear-gradient(135deg, #22c55e 0%, #15803d 100%)"; // green - Studying
-      case 2: return "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)"; // yellow - Away
+      case 0: return "linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%)"; // blue - Preparing
+      case 1: return "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)"; // green - Studying
+      case 2: return "linear-gradient(135deg, #f59e0b 0%, #eab308 100%)"; // yellow - Away
       case 3: return "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)"; // purple - Sleeping
       case 4: return "linear-gradient(135deg, #f97316 0%, #ea580c 100%)"; // orange - Looking elsewhere
       default: return "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)"; // gray

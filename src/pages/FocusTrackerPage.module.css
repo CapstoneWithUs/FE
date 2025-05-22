@@ -1,66 +1,76 @@
 .container {
   min-height: 100vh;
-  background: var(--gradient-subtle);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  color: #212529;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem 1rem;
-  padding-bottom: 8rem;
+  padding: 1rem;
+  position: relative;
 }
 
 .title {
   font-size: 2rem;
   font-weight: 700;
-  margin: 1rem 0 2rem 0;
+  margin: 1rem 0;
   text-align: center;
-  color: var(--primary-blue-dark);
-  text-shadow: 0 2px 4px rgba(91, 155, 213, 0.1);
+  color: #4472C4;
+  text-shadow: 0 2px 4px rgba(68, 114, 196, 0.15);
 }
 
+/* 모드 선택기를 화면 왼쪽에 고정 */
 .modeSelector {
-  background: var(--white);
+  position: fixed;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 1.5rem;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  border: 2px solid var(--primary-blue-light);
-  box-shadow: var(--shadow-strong);
-  width: 100%;
-  max-width: 600px;
+  padding: 1.5rem;
+  border: 2px solid #B4D2F7;
+  box-shadow: 0 8px 32px rgba(91, 155, 213, 0.2);
+  width: auto;
+  max-width: none;
+  z-index: 1000;
+  backdrop-filter: blur(20px);
 }
 
 .modeSelectorTitle {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   text-align: center;
-  color: var(--primary-blue-dark);
+  color: #4472C4;
+  white-space: nowrap;
 }
 
+/* 버튼들을 세로로 배치 */
 .toggleGroup {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100px;
 }
 
 .toggleButton {
-  padding: 1.25rem;
-  border: 2px solid var(--primary-blue-light);
-  border-radius: 1rem;
-  background: var(--white);
-  color: var(--primary-blue);
+  padding: 1rem;
+  border: 2px solid #8BB3E8;
+  border-radius: 0.75rem;
+  background: #FFFFFF;
+  color: #5B9BD5;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   user-select: none;
-  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  min-height: 50px;
+  white-space: nowrap;
 }
 
 .toggleButton::before {
@@ -70,7 +80,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%);
   transition: left 0.4s ease;
   z-index: -1;
 }
@@ -80,20 +90,62 @@
 }
 
 .toggleButton:hover {
-  color: var(--white);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
+  color: #FFFFFF;
+  transform: translateX(4px);
+  box-shadow: 0 4px 16px rgba(91, 155, 213, 0.25);
 }
 
 .toggleButton.active {
-  background: var(--gradient-primary);
-  border-color: var(--primary-blue);
-  color: var(--white);
+  background: linear-gradient(135deg, #5B9BD5 0%, #8BB3E8 100%);
+  border-color: #4472C4;
+  color: #FFFFFF;
   font-weight: 700;
-  box-shadow: var(--shadow-strong);
-  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(91, 155, 213, 0.3);
+  transform: scale(1.05);
 }
 
 .toggleButton.active::before {
   display: none;
+}
+
+/* 반응형 디자인 - 모바일에서는 상단으로 이동 */
+@media (max-width: 768px) {
+  .modeSelector {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 2rem;
+  }
+  
+  .toggleGroup {
+    flex-direction: row;
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+  }
+  
+  .toggleButton {
+    min-width: auto;
+    font-size: 0.75rem;
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .modeSelector {
+    left: 0.5rem;
+    padding: 1.25rem;
+  }
+  
+  .toggleGroup {
+    width: 90px;
+  }
+  
+  .toggleButton {
+    font-size: 0.75rem;
+    padding: 0.875rem;
+    min-height: 45px;
+  }
 }
