@@ -1,8 +1,6 @@
 /* Navbar.module.css */
 .navbar {
-    position: fixed;
     bottom: 0;
-    left: 0;
     width: 100%;
     background-color: #4a90ec;
     color: black;
@@ -14,7 +12,6 @@
     font-size: 1.25rem; /* text-xl */
     font-weight: 700; /* font-bold */
     z-index: 50;
-    margin-top: 1.5rem; /* mt-6 */
   }
   
   .navButton {

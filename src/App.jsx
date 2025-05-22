@@ -23,6 +23,7 @@ function App() {
     <CanvasContext.Provider value={canvasRef}> 
       <BrowserRouter>
         <Header />
+        <Navbar />
         <CanvasOverlay canvasRef={canvasRef} page="/focusTrackerPage" />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -35,10 +36,9 @@ function App() {
           <Route path="/settingPage" element={<SettingPage />} />
           <Route path="/debugging" element={<FaceDetection />} />
           <Route path="/add-subject" element={<AddSubjectPage />} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="*" element={<HomePage />} />
           <Route path="/statistics" element={<ShowStatistics />} />
         </Routes>
-        <Navbar />
       </BrowserRouter>
     </CanvasContext.Provider>
   );
