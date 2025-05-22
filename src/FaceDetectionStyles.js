@@ -56,6 +56,8 @@ export const styles = {
   
   videoContainer: {
     position: "relative",
+    width: "690px",
+    height: "530px",
     background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)",
     borderRadius: "1.5rem",
     backdropFilter: "blur(20px)",
@@ -73,6 +75,9 @@ export const styles = {
   video: {
     width: "640px",
     height: "480px",
+    position: "absolute",
+    top: 20,
+    lef: 0,
     borderRadius: "1rem",
     border: "2px solid rgba(255, 255, 255, 0.1)",
     boxShadow: `
@@ -86,6 +91,9 @@ export const styles = {
   canvas: {
     width: "640px",
     height: "480px",
+    position: "absolute",
+    top: 20,
+    lef: 0,
     borderRadius: "1rem",
     border: "2px solid rgba(255, 255, 255, 0.1)",
     boxShadow: `
