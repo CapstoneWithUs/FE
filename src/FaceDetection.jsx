@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
+import { useNavigate } from 'react-router-dom';
 import ProcessFrame from "./ProcessFrame";
 import { styles } from './FaceDetectionStyles';
 import {
@@ -11,7 +12,8 @@ import {
   StatsCards,
   UserGuide,
   ScoreGraph,
-  EndSessionButton
+  EndSessionButton,
+  StartSessionButton
 } from './FaceDetectionComponents';
 
 import calculateFocusScore from "./calculateFocusScore";
@@ -47,8 +49,10 @@ window.STATE = 0;
 window.isEyeClosed = false; // 눈 감은 상태 추적 변수
 window.eyeClosedTime = 0; // 눈 감은 시간 추적 변수
 window.isSleeping = false; // 수면 상태 추적 변수
+window.isSessionActive = false; // 세션 활성화 상태 추가
 
 const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
+  const navigate = useNavigate();
   const [focalLength, setFocalLength] = useState(380);
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
@@ -64,6 +68,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
   const [faceLandmarker, setFaceLandmarker] = useState(null);
   const faceLandmarkerRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [sessionActive, setSessionActive] = useState(false); // 세션 활성화 상태
   const [stateInfo, setStateInfo] = useState({
     now: performance.now(),
     state: 0,
@@ -87,6 +92,22 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       console.log('측정 과목:', subject);
     }
   }, [subject]);
+
+  // 측정 시작 함수
+  const startSession = () => {
+    // 전역 변수 초기화
+    window.prvTime = performance.now();
+    window.startTime = Date.now();
+    window.accTime = [0, 0, 0, 0, 0, 0, 0];
+    window.STATE = 0;
+    window.isEyeClosed = false;
+    window.eyeClosedTime = 0;
+    window.isSleeping = false;
+    window.isSessionActive = true;
+    
+    setSessionActive(true);
+    console.log('측정 시작됨:', currentSubject);
+  };
 
   const sendSessionDataToBackend = () => {
     // 최종 전송 데이터
@@ -172,6 +193,8 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       })
       .then(() => {
         alert("세션 데이터가 성공적으로 저장되었습니다!");
+        // 세션 종료 후 통계 페이지로 이동
+        navigate('/statistics', { state: { subject: currentSubject } });
       })
       .catch(error => {
         console.error('세션 데이터 전송 실패:', error);
@@ -263,6 +286,13 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
         requestAnimationFrame(detectFaces);
         return;
       }
+      
+      // 세션이 활성화되지 않은 경우 측정하지 않음
+      if (!sessionActive || !window.isSessionActive) {
+        requestAnimationFrame(detectFaces);
+        return;
+      }
+
       const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
 
       const now = performance.now();
@@ -289,7 +319,7 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       setTimeout(() => requestAnimationFrame(detectFaces), 100);
     };
     requestAnimationFrame(detectFaces);
-  }, [faceLandmarker]);
+  }, [faceLandmarker, sessionActive]);
 
   return (
     <div style={styles.container}>
@@ -323,8 +353,16 @@ const FaceDetection = ({ subject }) => {  // props로 subject 변수를 받음
       )}
 
       <UserGuide />
-      {/* 세션 종료 버튼 */}
-      <EndSessionButton onEndSession={sendSessionDataToBackend} />
+      
+      {/* 측정 시작/종료 버튼 */}
+      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+        {!sessionActive ? (
+          <StartSessionButton onStartSession={startSession} />
+        ) : (
+          <EndSessionButton onEndSession={sendSessionDataToBackend} />
+        )}
+      </div>
+      
       <ScoreGraph
         leftBlinkHistory={leftBlinkHistory}
         rightBlinkHistory={rightBlinkHistory}

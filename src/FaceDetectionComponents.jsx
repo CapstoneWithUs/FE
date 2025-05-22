@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Eye, EyeOff, ActivitySquare, User, Maximize2, Camera, Cpu, Sliders, AlertTriangle } from "lucide-react";
+import { Clock, Eye, EyeOff, ActivitySquare, User, Maximize2, Camera, Cpu, Sliders, AlertTriangle, Play } from "lucide-react";
 import { styles } from './FaceDetectionStyles';
 
 import TimeLineChart from "./TimeLineChart";
@@ -7,6 +7,26 @@ import TimeLineChart from "./TimeLineChart";
 import getTimeDecayAvg from "./getTimeDecayAvg";
 import getTimeDecaySum from "./getTimeDecaySum";
 import calculateFocusScore from "./calculateFocusScore";
+
+export const StartSessionButton = ({ onStartSession }) => (
+  <button 
+    onClick={onStartSession}
+    style={{
+      background: "#10b981",
+      color: "white",
+      padding: "0.75rem 1.5rem",
+      borderRadius: "0.5rem",
+      fontWeight: "bold",
+      border: "none",
+      cursor: "pointer",
+      marginTop: "1rem",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+    }}
+  >
+    <Play size={18} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
+    측정 시작
+  </button>
+);
 
 export const EndSessionButton = ({ onEndSession }) => (
   <button 
@@ -189,10 +209,12 @@ export const UserGuide = () => (
       사용 가이드
     </h3>
     <ul style={styles.guideList}>
+      <li style={styles.guideItem}>먼저 "측정 시작" 버튼을 눌러 측정을 시작하세요.</li>
       <li style={styles.guideItem}>웹캠이 얼굴을 인식하면 자동으로 시선 추적이 시작됩니다.</li>
       <li style={styles.guideItem}>눈을 5초 이상 감으면 수면 모드로 전환되며 공부 시간이 측정되지 않습니다.</li>
       <li style={styles.guideItem}>시선이 화면을 벗어나면 "다른 곳 응시" 상태로 변경됩니다.</li>
       <li style={styles.guideItem}>초점 거리를 조절하여 시선 추적의 정확도를 향상시킬 수 있습니다.</li>
+      <li style={styles.guideItem}>"세션 종료 및 저장" 버튼을 누르면 데이터가 저장되고 통계 페이지로 이동합니다.</li>
     </ul>
   </div>
 );
