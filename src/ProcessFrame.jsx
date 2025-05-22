@@ -116,7 +116,6 @@ const drawDebug = (canvas, landmarks, Yaw, Pitch, Roll, x, y, z, w, h) => {
   if (landmarks[0]) {
     ctx.fillStyle = "red";
     landmarks[0].forEach((point) => {
-      console.log(point.x*w, point.y*h);
       ctx.beginPath();
       ctx.arc(point.x * w, point.y * h, 2, 0, 2 * Math.PI);
       ctx.fill();
