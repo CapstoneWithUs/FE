@@ -40,6 +40,8 @@ export const styles = {
   },
   videoContainer: {
     position: "relative",
+    width: "640px",
+    height: "480px",
     background: "rgba(30, 41, 59, 0.8)",
     borderRadius: "1rem",
     backdropFilter: "blur(10px)",
@@ -51,6 +53,9 @@ export const styles = {
   video: {
     width: "640px",
     height: "480px",
+    position: "absolute",
+    top: 0,
+    lef: 0,
     borderRadius: "0.75rem",
     border: "2px solid rgba(255, 255, 255, 0.05)",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)"
@@ -58,6 +63,9 @@ export const styles = {
   canvas: {
     width: "640px",
     height: "480px",
+    position: "absolute",
+    top: 0,
+    lef: 0,
     borderRadius: "0.75rem",
     border: "2px solid rgba(255, 255, 255, 0.05)",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)"

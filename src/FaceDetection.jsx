@@ -78,6 +78,20 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
   const { scoreLog, scoreLogger } = useScoreLogger(Date.now());
 
   const videoRef = useRef(null);
+  const displayModeRef = useRef("webcam");
+  useEffect(() => {
+    displayModeRef.current = displayMode;
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      if (displayMode == "webcam") canvas.style.backgroundColor = "transparent";
+      if (displayMode == "debug") canvas.style.backgroundColor = "blue";
+      if (displayMode == "pip") canvas.style.backgroundColor = "transparent";
+      if (displayMode == "faceOff") canvas.style.backgroundColor = "black";
+    }
+    if (videoRef.current && displayMode == "pip")  videoRef.current.requestPictureInPicture();
+  }, [displayMode]);
+
   const canvasRef = useRef(null);
   const [faceLandmarker, setFaceLandmarker] = useState(null);
   const faceLandmarkerRef = useRef(null);
@@ -96,17 +110,6 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
   const [currentSubject, setCurrentSubject] = useState(
     subject || localStorage.getItem('currentSubject') || 'Blank'
   );
-
-  // displayMode에 따른 표시용 video ref들
-  const displayVideoRef = useRef(null);
-  const displayCanvasRef = useRef(null);
-
-  // 표시용 비디오에 스트림 연결 (한 번만)
-  useEffect(() => {
-    if (displayVideoRef.current && videoRef.current?.srcObject) {
-      displayVideoRef.current.srcObject = videoRef.current.srcObject;
-    }
-  }, [videoRef.current?.srcObject, displayMode]);
 
   useEffect(() => {
     if (subject) {
@@ -316,6 +319,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
       ) * 100;
 
       ProcessFrame(
+        displayModeRef.current,
         window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480,
         blinkCounter,
         earLogger,
@@ -335,313 +339,56 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
 
       <Header />
 
-      {/* 항상 렌더링되는 실제 비디오와 캔버스 (ref 연결용) */}
-      <video ref={videoRef} autoPlay playsInline style={{ display: 'none' }} />
-      <canvas ref={canvasRef} width="640" height="480" style={{ display: 'none' }} />
-
       {loading ? (
         <LoadingScreen />
       ) : (
         <div style={styles.mainContent}>
-          {/* 웹캠 화면 모드 */}
-          {displayMode === 'webcam' && (
-            <>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={styles.videoContainer}>
-                  <video 
-                    ref={displayVideoRef}
-                    autoPlay 
-                    playsInline 
-                    style={styles.video}
-                  />
-                  <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
-                    <span style={{ 
-                      fontFamily: "monospace", 
-                      fontSize: "1.25rem", 
-                      color: "#ff0000", 
-                      fontWeight: "bold" 
-                    }}>
-                      {(() => {
-                        const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                        const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                        const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                        const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                        return `${hours}:${minutes}:${seconds}`;
-                      })()}
-                    </span>
-                  </div>
-                  {stateInfo.state === 2 && (
-                    <div style={styles.awayMessageContainer}>
-                      <p style={styles.awayMessageText}>자리를 비웠습니다</p>
-                    </div>
-                  )}
-                  {currentSubject && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '40px',
-                      left: '1rem',
-                      background: 'rgba(0, 0, 0, 0.7)',
-                      color: 'white',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: 'bold'
-                    }}>
-                      과목: {currentSubject}
-                    </div>
-                  )}
-                </div>
-                <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={styles.videoContainer}>
+              <video ref={videoRef} autoPlay playsInline style={styles.video} />
+              <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
+              <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
+                <span style={{ 
+                  fontFamily: "monospace", 
+                  fontSize: "1.25rem", 
+                  color: "#ff0000", 
+                  fontWeight: "bold" 
+                }}>
+                  {(() => {
+                    const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
+                    const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                    const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                    const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                    return `${hours}:${minutes}:${seconds}`;
+                  })()}
+                </span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
-              </div>
-            </>
-          )}
-
-          {/* 디버깅 화면 모드 */}
-          {displayMode === 'debug' && (
-            <>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={styles.videoContainer}>
-                  <video 
-                    ref={displayVideoRef}
-                    autoPlay 
-                    playsInline 
-                    style={styles.video}
-                  />
-                  <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
-                    <span style={{ 
-                      fontFamily: "monospace", 
-                      fontSize: "1.25rem", 
-                      color: "#ff0000", 
-                      fontWeight: "bold" 
-                    }}>
-                      {(() => {
-                        const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                        const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                        const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                        const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                        return `${hours}:${minutes}:${seconds}`;
-                      })()}
-                    </span>
-                  </div>
-                  {currentSubject && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '40px',
-                      left: '1rem',
-                      background: 'rgba(0, 0, 0, 0.7)',
-                      color: 'white',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: 'bold'
-                    }}>
-                      과목: {currentSubject}
-                    </div>
-                  )}
+              {stateInfo.state === 2 && (
+                <div style={styles.awayMessageContainer}>
+                  <p style={styles.awayMessageText}>자리를 비웠습니다</p>
                 </div>
-                <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={styles.videoContainer}>
-                  <canvas 
-                    width="640" 
-                    height="480" 
-                    style={styles.canvas}
-                    ref={(el) => {
-                      if (el && canvasRef.current) {
-                        const ctx = el.getContext('2d');
-                        const originalCtx = canvasRef.current.getContext('2d');
-                        if (ctx && originalCtx) {
-                          ctx.drawImage(canvasRef.current, 0, 0);
-                        }
-                      }
-                    }}
-                  />
-                  <div style={{...styles.badge, top: "1rem", right: "1rem"}}>
-                    <span style={{ 
-                      fontFamily: "monospace", 
-                      fontSize: "1.25rem", 
-                      color: "#ff0000", 
-                      fontWeight: "bold" 
-                    }}>
-                      {(() => {
-                        const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                        const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                        const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                        const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                        return `${hours}:${minutes}:${seconds}`;
-                      })()}
-                    </span>
-                  </div>
-                </div>
-                <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
-              </div>
-            </>
-          )}
-
-          {/* PIP 모드 */}
-          {displayMode === 'pip' && (
-            <>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-                {/* 큰 디버깅 화면 */}
-                <div style={styles.videoContainer}>
-                  <canvas 
-                    width="640" 
-                    height="480" 
-                    style={styles.canvas}
-                    ref={(el) => {
-                      if (el && canvasRef.current) {
-                        const ctx = el.getContext('2d');
-                        const originalCtx = canvasRef.current.getContext('2d');
-                        if (ctx && originalCtx) {
-                          ctx.drawImage(canvasRef.current, 0, 0);
-                        }
-                      }
-                    }}
-                  />
-                  <div style={{...styles.badge, top: "1rem", right: "1rem"}}>
-                    <span style={{ 
-                      fontFamily: "monospace", 
-                      fontSize: "1.25rem", 
-                      color: "#ff0000", 
-                      fontWeight: "bold" 
-                    }}>
-                      {(() => {
-                        const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                        const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                        const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                        const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                        return `${hours}:${minutes}:${seconds}`;
-                      })()}
-                    </span>
-                  </div>
-                </div>
-                {/* 작은 웹캠 화면 */}
+              )}
+              {currentSubject && (
                 <div style={{
-                  width: '240px',
-                  height: '180px',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  position: 'absolute',
+                  top: '40px',
+                  left: '1rem',
+                  background: 'rgba(0, 0, 0, 0.7)',
+                  color: 'white',
+                  padding: '0.5rem 0.75rem',
                   borderRadius: '0.5rem',
-                  overflow: 'hidden',
-                  position: 'relative'
+                  fontSize: '14px',
+                  fontWeight: 'bold'
                 }}>
-                  <video 
-                    ref={(el) => {
-                      if (el && videoRef.current?.srcObject && el !== displayVideoRef.current) {
-                        el.srcObject = videoRef.current.srcObject;
-                      }
-                    }}
-                    autoPlay 
-                    playsInline 
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                  <div style={{
-                    position: 'absolute',
-                    top: '0.5rem',
-                    left: '0.5rem',
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    color: 'white',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '0.25rem',
-                    fontSize: '12px'
-                  }}>
-                    웹캠
-                  </div>
+                  과목: {currentSubject}
                 </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "1rem" }}>
-                <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
-                <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
-              </div>
-            </>
-          )}
-
-          {/* 얼굴 화면 OFF 모드 */}
-          {displayMode === 'faceOff' && (
-            <>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '2rem',
-                padding: '2rem'
-              }}>
-                {/* 과목명 */}
-                <div style={{
-                  background: 'rgba(59, 130, 246, 0.2)',
-                  border: '2px solid rgba(59, 130, 246, 0.5)',
-                  borderRadius: '1rem',
-                  padding: '1rem 2rem',
-                  textAlign: 'center'
-                }}>
-                  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#bfdbfe' }}>
-                    {currentSubject}
-                  </h2>
-                </div>
-
-                {/* 큰 타이머 */}
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.2)',
-                  border: '2px solid rgba(16, 185, 129, 0.5)',
-                  borderRadius: '1rem',
-                  padding: '2rem',
-                  textAlign: 'center'
-                }}>
-                  <span style={{
-                    fontFamily: 'monospace',
-                    fontSize: '3rem',
-                    fontWeight: 'bold',
-                    color: '#10b981'
-                  }}>
-                    {(() => {
-                      const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                      const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                      const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                      const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                      return `${hours}:${minutes}:${seconds}`;
-                    })()}
-                  </span>
-                  <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
-                    총 공부 시간
-                  </p>
-                </div>
-
-                {/* 현재 상태 */}
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '2px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '1rem',
-                  padding: '1.5rem',
-                  textAlign: 'center'
-                }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
-                    {(() => {
-                      switch(stateInfo.state) {
-                        case 0: return '준비 중';
-                        case 1: return '공부 중';
-                        case 2: return '자리 이탈';
-                        case 3: return '수면';
-                        case 4: return '다른 곳 응시';
-                        default: return '준비 중';
-                      }
-                    })()}
-                  </span>
-                  <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
-                    현재 상태
-                  </p>
-                </div>
-              </div>
-              
-              <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
-            </>
-          )}
+              )}
+            </div>
+            <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
+          </div>
         </div>
       )}
 
