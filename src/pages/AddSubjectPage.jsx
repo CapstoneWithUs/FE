@@ -23,7 +23,7 @@ const AddSubjectPage = () => {
           }`}
           disabled={!subject.trim()}
           onClick={() => {
-            navigate('/HomePage', { state: { newSubject: subject.trim() } });
+            navigate('/', { state: { newSubject: subject.trim() } });
           }}
         >
           완료

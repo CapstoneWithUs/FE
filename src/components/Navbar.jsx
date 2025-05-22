@@ -9,7 +9,7 @@ function Navbar() {
     <nav className={styles.navbar}>
       <button
         className={styles.navButton}
-        onClick={() => navigate('/HomePage')}
+        onClick={() => navigate('/')}
       >
         홈
       </button>
