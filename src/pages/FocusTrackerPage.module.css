@@ -1,8 +1,7 @@
-/* FocusTrackerPage.module.css */
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: white;
+  background: var(--gradient-subtle);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,21 +11,20 @@
 
 .title {
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: 700;
   margin: 1rem 0 2rem 0;
   text-align: center;
-  color: #f1f5f9;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: var(--primary-blue-dark);
+  text-shadow: 0 2px 4px rgba(91, 155, 213, 0.1);
 }
 
 .modeSelector {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  padding: 1.5rem;
+  background: var(--white);
+  border-radius: 1.5rem;
+  padding: 2rem;
   margin-bottom: 2rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--primary-blue-light);
+  box-shadow: var(--shadow-strong);
   width: 100%;
   max-width: 600px;
 }
@@ -34,33 +32,31 @@
 .modeSelectorTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   text-align: center;
-  color: #e2e8f0;
+  color: var(--primary-blue-dark);
 }
 
 .toggleGroup {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .toggleButton {
-  padding: 1rem 1.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  padding: 1.25rem;
+  border: 2px solid var(--primary-blue-light);
+  border-radius: 1rem;
+  background: var(--white);
+  color: var(--primary-blue);
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
   position: relative;
   overflow: hidden;
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  min-height: 56px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,114 +70,30 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
+  background: var(--gradient-primary);
+  transition: left 0.4s ease;
+  z-index: -1;
 }
 
 .toggleButton:hover::before {
-  left: 100%;
+  left: 0;
 }
 
 .toggleButton:hover {
-  border-color: rgba(59, 130, 246, 0.6);
-  background: rgba(59, 130, 246, 0.1);
-  color: #bfdbfe;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
 }
 
 .toggleButton.active {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  border-color: #3b82f6;
-  color: white;
+  background: var(--gradient-primary);
+  border-color: var(--primary-blue);
+  color: var(--white);
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+  box-shadow: var(--shadow-strong);
   transform: scale(1.02);
 }
 
 .toggleButton.active::before {
   display: none;
-}
-
-/* 태블릿 세로 모드 */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .container {
-    padding: 3rem 2rem;
-  }
-  
-  .title {
-    font-size: 2.25rem;
-    margin: 1.5rem 0 2.5rem 0;
-  }
-  
-  .modeSelector {
-    padding: 2rem;
-    max-width: 700px;
-  }
-  
-  .modeSelectorTitle {
-    font-size: 1.375rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .toggleGroup {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-  }
-  
-  .toggleButton {
-    padding: 1.25rem 1rem;
-    font-size: 1rem;
-    min-height: 64px;
-  }
-}
-
-/* 태블릿 가로 모드 */
-@media (min-width: 1024px) {
-  .container {
-    padding: 4rem 3rem;
-  }
-  
-  .title {
-    font-size: 2.5rem;
-    margin: 2rem 0 3rem 0;
-  }
-  
-  .modeSelector {
-    padding: 2.5rem;
-    max-width: 800px;
-  }
-  
-  .modeSelectorTitle {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  
-  .toggleGroup {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
-  }
-  
-  .toggleButton {
-    padding: 1.5rem 1.25rem;
-    font-size: 1.125rem;
-    min-height: 72px;
-    border-radius: 1rem;
-  }
-}
-
-/* 터치 디바이스 최적화 */
-@media (hover: none) and (pointer: coarse) {
-  .toggleButton:hover {
-    transform: none;
-  }
-  
-  .toggleButton:active {
-    transform: scale(0.98);
-    background: rgba(59, 130, 246, 0.2);
-  }
-  
-  .toggleButton.active:active {
-    transform: scale(1);
-  }
 }

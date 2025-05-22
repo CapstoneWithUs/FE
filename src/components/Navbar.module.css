@@ -1,34 +1,46 @@
-/* Navbar.module.css */
 .navbar {
-    bottom: 0;
-    width: 100%;
-    background-color: #4a90ec;
-    color: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem; /* gap-x-4 */
-    height: 4rem; /* h-16 */
-    font-size: 1.25rem; /* text-xl */
-    font-weight: 700; /* font-bold */
-    z-index: 50;
-  }
-  
-  .navButton {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem; /* px-4 py-2 */
-    border: 2px solid #4b5563; /* border-2 border-gray-700 */
-    border-radius: 0.5rem; /* rounded-lg */
-    background-color: white; /* bg-white */
-    margin-left: 0.5rem; /* mx-2 */
-    margin-right: 0.5rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-    transition: background-color 0.3s; /* transition */
-  }
-  
-  .navButton:hover {
-    background-color: #e5e7eb; /* hover:bg-gray-200 */
-  }
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: var(--white);
+  border-top: 2px solid var(--primary-blue-light);
+  color: var(--text-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  height: 4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  z-index: 50;
+  box-shadow: 0 -4px 16px rgba(91, 155, 213, 0.1);
+}
+
+.navButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--primary-blue);
+  border-radius: 0.75rem;
+  background: var(--white);
+  color: var(--primary-blue);
+  margin: 0 0.25rem;
+  box-shadow: var(--shadow-subtle);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-weight: 600;
+  min-width: 70px;
+}
+
+.navButton:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.navButton:active {
+  transform: translateY(0);
+}
