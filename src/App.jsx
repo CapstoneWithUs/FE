@@ -12,14 +12,14 @@ import StatsPage from './pages/StatsPage';
 import SettingPage from './pages/SettingPage';
 import AddSubjectPage from './pages/AddSubjectPage';
 import Header from './components/Header';
-import Navbar from './components/Navbar';
+// import Navbar from './components/Navbar'; // 하단 네비게이션 제거
 import ShowStatistics from './pages/statistics/ShowStatistics';
 
 function App() {
   return (
     <BrowserRouter>
       <Header />
-      <Navbar />
+      {/* <Navbar /> 하단 네비게이션 제거 */}
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/landingPage" element={<LandingPage />} />

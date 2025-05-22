@@ -26,6 +26,8 @@ import { useHeadAngleVariation } from "./headAngleVariation";
 import { useHeadMovement } from "./headMovement";
 import { useScoreLogger } from "./useScoreLogger";
 
+import { useCanvas } from "./components/CanvasOverlay";
+
 const LoadCV = async () => {
   if (typeof cv === "undefined") {
     return new Promise((resolve) => {
@@ -86,13 +88,14 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
       canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
       if (displayMode == "webcam") canvas.style.backgroundColor = "transparent";
       if (displayMode == "debug") canvas.style.backgroundColor = "blue";
-      if (displayMode == "pip") canvas.style.backgroundColor = "transparent";
+      if (displayMode == "pip") canvas.style.backgroundColor = "black";
       if (displayMode == "faceOff") canvas.style.backgroundColor = "black";
     }
     if (videoRef.current && displayMode == "pip")  videoRef.current.requestPictureInPicture();
   }, [displayMode]);
 
   const canvasRef = useRef(null);
+  const canvasOverlayRef = useCanvas();
   const [faceLandmarker, setFaceLandmarker] = useState(null);
   const faceLandmarkerRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -294,6 +297,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
       }
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      const canvasOverlay = canvasOverlayRef.current;
 
       if (typeof window.cv === "undefined" || !faceLandmarkerRef.current || video.readyState <= 2) {
         requestAnimationFrame(detectFaces);
@@ -320,7 +324,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
 
       ProcessFrame(
         displayModeRef.current,
-        window.cv, canvas, faces.faceLandmarks, focalRef.current, 640, 480,
+        window.cv, canvas, canvasOverlay, faces.faceLandmarks, focalRef.current, 640, 480,
         blinkCounter,
         earLogger,
         headAngleVariation,
@@ -342,56 +346,141 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
       {loading ? (
         <LoadingScreen />
       ) : (
-        <div style={styles.mainContent}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={styles.videoContainer}>
-              <video ref={videoRef} autoPlay playsInline style={styles.video} />
-              <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
-              <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
-                <span style={{ 
-                  fontFamily: "monospace", 
-                  fontSize: "1.25rem", 
-                  color: "#ff0000", 
-                  fontWeight: "bold" 
-                }}>
-                  {(() => {
-                    const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                    const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                    const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                    const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                    return `${hours}:${minutes}:${seconds}`;
-                  })()}
-                </span>
-              </div>
-              {stateInfo.state === 2 && (
-                <div style={styles.awayMessageContainer}>
-                  <p style={styles.awayMessageText}>자리를 비웠습니다</p>
-                </div>
-              )}
-              {currentSubject && (
+        <>
+          <div style={styles.mainContent}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={styles.videoContainer}>
+                <video ref={videoRef} autoPlay playsInline style={styles.video} />
+                <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
+                
+          {displayMode === 'faceOff' && (
+            <>
+              <div style={{
+                position: 'absolute',
+                top: 10,
+                left: 170,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2rem',
+                padding: '2rem'
+              }}>
+                {/* 과목명 */}
                 <div style={{
-                  position: 'absolute',
-                  top: '40px',
-                  left: '1rem',
-                  background: 'rgba(0, 0, 0, 0.7)',
-                  color: 'white',
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '0.5rem',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
+                  background: 'rgba(59, 130, 246, 0.2)',
+                  border: '2px solid rgba(59, 130, 246, 0.5)',
+                  borderRadius: '1rem',
+                  padding: '1rem 2rem',
+                  textAlign: 'center'
                 }}>
-                  과목: {currentSubject}
+                  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#bfdbfe' }}>
+                    {currentSubject}
+                  </h2>
                 </div>
-              )}
-            </div>
-            <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
-          </div>
-        </div>
-      )}
 
+                {/* 큰 타이머 */}
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.2)',
+                  border: '2px solid rgba(16, 185, 129, 0.5)',
+                  borderRadius: '1rem',
+                  padding: '2rem',
+                  textAlign: 'center'
+                }}>
+                  <span style={{
+                    fontFamily: 'monospace',
+                    fontSize: '3rem',
+                    fontWeight: 'bold',
+                    color: '#10b981'
+                  }}>
+                    {(() => {
+                      const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
+                      const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                      const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                      const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                      return `${hours}:${minutes}:${seconds}`;
+                    })()}
+                  </span>
+                  <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
+                    총 공부 시간
+                  </p>
+                </div>
+
+                {/* 현재 상태 */}
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '1rem',
+                  padding: '1.5rem',
+                  textAlign: 'center'
+                }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
+                    {(() => {
+                      switch(stateInfo.state) {
+                        case 0: return '준비 중';
+                        case 1: return '공부 중';
+                        case 2: return '자리 이탈';
+                        case 3: return '수면';
+                        case 4: return '다른 곳 응시';
+                        default: return '준비 중';
+                      }
+                    })()}
+                  </span>
+                  <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
+                    현재 상태
+                  </p>
+                </div>
+              </div>
+              
+            </>
+          )}
+
+
+                <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
+                  <span style={{ 
+                    fontFamily: "monospace", 
+                    fontSize: "1.25rem", 
+                    color: "#ff0000", 
+                    fontWeight: "bold" 
+                  }}>
+                    {(() => {
+                      const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
+                      const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                      const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                      const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                      return `${hours}:${minutes}:${seconds}`;
+                    })()}
+                  </span>
+                </div>
+                {stateInfo.state === 2 && (
+                  <div style={styles.awayMessageContainer}>
+                    <p style={styles.awayMessageText}>자리를 비웠습니다</p>
+                  </div>
+                )}
+                {currentSubject && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '40px',
+                    left: '1rem',
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    color: 'white',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.5rem',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    과목: {currentSubject}
+                  </div>
+                )}
+              </div>
+              <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
+            </div>
+          </div>
+        </>
+      )}
+      
       <UserGuide />
       
       <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>

@@ -25,7 +25,7 @@ import { accumulateTime } from "./accumulateTime";
 //0: 준비 중, 1: 공부 중, 2: 자리 이탈, 3: 수면, 4: 다른 곳 응시
 const ProcessFrame = (
   displayMode,
-  cv, canvas, landmarks, focal_length, w, h,
+  cv, canvas, canvasOverlay, landmarks, focal_length, w, h,
   blinkCounter,
   earLogger,
   headAngleVariation,
@@ -46,7 +46,7 @@ const ProcessFrame = (
     window.STATE = 2;
     if (displayMode == "debug") {
       drawDebug(canvas, [], null, null, null, null, null, null, w, h);
-      drawGaze(null, null, null, null, null, w, h);
+      drawGaze(canvasOverlay, null, null, null, null, null);
     }
     window.prvTime = currentTime;
     return;
@@ -70,7 +70,7 @@ const ProcessFrame = (
 
   if (displayMode == "debug") {
     drawDebug(canvas, landmarks, Yaw, Pitch, Roll, Math.round(x), Math.round(y), Math.round(z), w, h);
-    drawGaze(x, y, z, yaw, pitch, w, h);
+    drawGaze(canvasOverlay, x, y, z, yaw, pitch);
   }
 
   eyeClopen(landmarks, yaw, pitch, w, h, currentTime);
@@ -123,7 +123,7 @@ const drawDebug = (canvas, landmarks, Yaw, Pitch, Roll, x, y, z, w, h) => {
     });
   }
   ctx.fillStyle = "red";
-  ctx.textAlign = 'end';
+  ctx.textAlign = "end";
   ctx.font = "bold 20px Arial";
   if (Yaw != null && Pitch != null && Roll != null) {
     ctx.fillText(`Angle(deg): ${Yaw},${Pitch},${Roll}`, 630, 30);
@@ -133,36 +133,18 @@ const drawDebug = (canvas, landmarks, Yaw, Pitch, Roll, x, y, z, w, h) => {
   }
 };
 
-var gazeCanvas;
-
-const drawGaze = (tx, ty, tz, yaw, pitch) => {
-  if (tx == null || ty == null || tz == null || yaw == null || pitch == null) return;
-  if (gazeCanvas == undefined) {
-    gazeCanvas = document.createElement("canvas");
-    gazeCanvas.style.position = "fixed";
-    gazeCanvas.style.top = "0";
-    gazeCanvas.style.left = "0";
-    gazeCanvas.style.width = "100vw";
-    gazeCanvas.style.height = "100vh";
-    gazeCanvas.style.zIndex = "9999";
-    gazeCanvas.style.pointerEvents = "none";
-
-    gazeCanvas.width = window.innerWidth;
-    gazeCanvas.height = window.innerHeight;
-
-    document.body.appendChild(gazeCanvas);
-  }
-  const ctx = gazeCanvas.getContext("2d");
-  
+const drawGaze = (canvas, tx, ty, tz, yaw, pitch) => {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   let x = tx+Math.tan(yaw)*tz;
   let y = ty+Math.tan(pitch+10/180*Math.PI)*tz;
   if (x < -500 || x > 500 || y < -100) window.STATE = 4;
 
-  ctx.clearRect(0, 0, gazeCanvas.width, gazeCanvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "red";
   ctx.beginPath();
-  ctx.arc(x/25.4*PPI+gazeCanvas.width/2, y/25.4*PPI, 10, 0, 2*Math.PI);
+  ctx.arc(x/25.4*PPI+canvas.width/2, y/25.4*PPI, 10, 0, 2*Math.PI);
   ctx.fill();
 
   ctx.strokeStyle = "red";
@@ -172,13 +154,13 @@ const drawGaze = (tx, ty, tz, yaw, pitch) => {
   for (let i = 0; i <= 360; i += 5) {
     if (i == 0) {
       ctx.moveTo(
-        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+gazeCanvas.width/2,
+        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+canvas.width/2,
         (y+sz*Math.cos(i/180*Math.PI))/25.4*PPI
       );
     }
     else {
       ctx.lineTo(
-        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+gazeCanvas.width/2,
+        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+canvas.width/2,
         (y+sz*Math.cos(i/180*Math.PI))/25.4*PPI
       );
     }
