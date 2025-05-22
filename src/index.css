@@ -1,4 +1,4 @@
-/*폰트 설정*/
+/* 폰트 설정
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
@@ -8,7 +8,7 @@
 
 @layer base {
   html {
-    /* font-family: 'Pretendard', system-ui, sans-serif; */
+    font-family: 'Pretendard', system-ui, sans-serif;
   }
   
   body {
@@ -41,7 +41,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* 다크 모드 */
+  
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424; 
 
@@ -92,7 +92,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-/* 라이트 모드 */
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -104,4 +104,4 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-}
+} */

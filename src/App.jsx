@@ -19,7 +19,6 @@ function App() {
   return (
     <BrowserRouter>
       <Header />
-      <div className="flex-1 pt-24 pb-20 bg-gray-100 min-h-screen">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/landingPage" element={<LandingPage />} />
@@ -34,7 +33,6 @@ function App() {
           <Route path="*" element={<HomePage />} />
           <Route path="/statistics" element={<ShowStatistics />} />
         </Routes>
-      </div>
       <Navbar />
     </BrowserRouter>
   );
