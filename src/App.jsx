@@ -31,7 +31,7 @@ function App() {
           <Route path="/settingPage" element={<SettingPage />} />
           <Route path="/debugging" element={<FaceDetection />} />
           <Route path="/add-subject" element={<AddSubjectPage />} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="*" element={<HomePage />} />
           <Route path="/statistics" element={<ShowStatistics />} />
         </Routes>
       </div>
