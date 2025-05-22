@@ -1,4 +1,33 @@
-import React from 'react';
+// 모드 선택 컴포넌트 - 왼쪽 세로 배치
+export const ModeSelector = ({ displayMode, onModeChange }) => {
+  const modes = [
+    { key: 'webcam', label: '웹캠 화면' },
+    { key: 'debug', label: '디버깅 화면' },
+    { key: 'pip', label: 'PIP 모드' },
+    { key: 'faceOff', label: '얼굴 화면 OFF' }
+  ];
+
+  return (
+    <div style={styles.modeSelector} className="mode-selector">
+      <div style={styles.modeSelectorTitle}>화면 모드</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }} className="toggle-group">
+        {modes.map(mode => (
+          <button
+            key={mode.key}
+            onClick={() => onModeChange(mode.key)}
+            style={{
+              ...styles.modeButton,
+              ...(displayMode === mode.key ? styles.modeButtonActive : {})
+            }}
+            className="mode-button"
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};import React from 'react';
 import { Clock, Eye, EyeOff, ActivitySquare, User, Maximize2, Camera, Cpu, Sliders, AlertTriangle, Play, Monitor, Minimize2 } from "lucide-react";
 import { styles } from './FaceDetectionStyles';
 
@@ -36,40 +65,45 @@ export const EndSessionButton = ({ onEndSession }) => (
   </button>
 );
 
-// 모드 선택 컴포넌트 - 왼쪽 세로 배치
-export const ModeSelector = ({ displayMode, onModeChange }) => {
-  const modes = [
-    { key: 'webcam', label: '웹캠 화면' },
-    { key: 'debug', label: '디버깅 화면' },
-    { key: 'pip', label: 'PIP 모드' },
-    { key: 'faceOff', label: '얼굴 화면 OFF' }
-  ];
+// 메인 컨텐츠 레이아웃 컴포넌트 (카메라 + 우측 패널)
+export const MainContentLayout = ({ children }) => (
+  <div style={styles.mainContent} className="main-content">
+    {children}
+  </div>
+);
 
-  return (
-    <div style={styles.modeSelector}>
-      <div style={styles.modeSelectorTitle}>화면 모드</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {modes.map(mode => (
-          <button
-            key={mode.key}
-            onClick={() => onModeChange(mode.key)}
-            style={{
-              ...styles.modeButton,
-              ...(displayMode === mode.key ? styles.modeButtonActive : {})
-            }}
-            className="mode-button"
-          >
-            {mode.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
+// 비디오 섹션 컴포넌트
+export const VideoSection = ({ children }) => (
+  <div style={styles.videoSection}>
+    {children}
+  </div>
+);
 
-// 세션 컨트롤 컴포넌트 - 상단 배치
+// 우측 패널 컴포넌트 (통계 + 가이드 + 버튼)
+export const RightPanel = ({ 
+  studyTime, 
+  sleepTime, 
+  focalLength, 
+  setFocalLength, 
+  sessionActive, 
+  onStartSession, 
+  onEndSession 
+}) => (
+  <div style={styles.rightPanel} className="right-panel">
+    <SessionControls 
+      sessionActive={sessionActive} 
+      onStartSession={onStartSession} 
+      onEndSession={onEndSession} 
+    />
+    <StatsCards studyTime={studyTime} sleepTime={sleepTime} />
+    <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
+    <UserGuide />
+  </div>
+);
+
+// 세션 컨트롤 컴포넌트 - 우측 패널 내부로 이동
 export const SessionControls = ({ sessionActive, onStartSession, onEndSession }) => (
-  <div style={styles.sessionControls}>
+  <div style={styles.sessionControls} className="session-controls">
     {!sessionActive ? (
       <StartSessionButton onStartSession={onStartSession} />
     ) : (
@@ -432,20 +466,20 @@ export const FocalLengthSlider = ({ focalLength, setFocalLength }) => (
 );
 
 export const StatsCards = ({ studyTime, sleepTime }) => (
-  <div style={styles.statsContainer}>
+  <div style={styles.statsContainer} className="stats-container">
     <div style={styles.statCard}>
       <h3 style={styles.statHeader}>
         <Clock size={18} color="#5B9BD5" />
         공부 시간
       </h3>
-      <p style={{ ...styles.timeValue, color: "#4472C4" }}>{formatTime(studyTime)}</p>
+      <p style={{ ...styles.timeValue, color: "#4472C4", fontSize: "1.5rem" }}>{formatTime(studyTime)}</p>
     </div>
     <div style={styles.statCard}>
       <h3 style={styles.statHeader}>
         <EyeOff size={18} color="#a855f7" />
         수면 시간
       </h3>
-      <p style={{ ...styles.timeValue, color: "#a855f7" }}>{formatTime(sleepTime)}</p>
+      <p style={{ ...styles.timeValue, color: "#a855f7", fontSize: "1.5rem" }}>{formatTime(sleepTime)}</p>
     </div>
   </div>
 );

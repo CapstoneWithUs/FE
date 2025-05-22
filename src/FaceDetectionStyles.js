@@ -72,16 +72,16 @@ export const styles = {
     transform: "scale(1.05)"
   },
 
-  // 세션 컨트롤 버튼들을 상단으로 이동
+  // 세션 컨트롤 버튼들을 우측 패널로 이동
   sessionControls: {
     display: "flex",
+    flexDirection: "column",
     gap: "1rem",
-    marginBottom: "1.5rem",
-    zIndex: 10
+    width: "100%"
   },
 
   sessionButton: {
-    padding: "0.875rem 1.5rem",
+    padding: "1rem 1.5rem",
     borderRadius: "0.75rem",
     fontWeight: "600",
     fontSize: "1rem",
@@ -91,7 +91,9 @@ export const styles = {
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
     display: "flex",
     alignItems: "center",
-    gap: "0.5rem"
+    justifyContent: "center",
+    gap: "0.5rem",
+    width: "100%"
   },
 
   startButton: {
@@ -106,14 +108,33 @@ export const styles = {
   
   mainContent: {
     display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
+    flexDirection: "row",
+    alignItems: "flex-start",
     justifyContent: "center",
     width: "100%",
-    maxWidth: "1200px",
+    maxWidth: "1400px",
     position: "relative",
     zIndex: 10,
-    marginLeft: "120px" // 왼쪽 모드 버튼 공간 확보
+    marginLeft: "120px", // 왼쪽 모드 버튼 공간 확보
+    gap: "2rem",
+    marginTop: "2rem"
+  },
+
+  // 왼쪽 비디오 컨테이너 영역
+  videoSection: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center"
+  },
+
+  // 우측 컨트롤 패널 (통계, 가이드, 버튼)
+  rightPanel: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1.5rem",
+    minWidth: "400px",
+    maxWidth: "450px",
+    width: "100%"
   },
   
   videoContainer: {
@@ -226,15 +247,13 @@ export const styles = {
   statsContainer: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "1.25rem",
-    width: "100%",
-    marginTop: "1.5rem",
-    maxWidth: "600px"
+    gap: "1rem",
+    width: "100%"
   },
 
   statCard: {
     background: "linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%)",
-    padding: "1.25rem",
+    padding: "1rem",
     borderRadius: "1rem",
     boxShadow: "0 4px 16px rgba(91, 155, 213, 0.15)",
     border: "2px solid #B4D2F7",
@@ -261,9 +280,7 @@ export const styles = {
   },
 
   sliderContainer: {
-    marginTop: "1.5rem",
     width: "100%",
-    maxWidth: "600px",
     padding: "1rem 1.25rem",
     background: "linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%)",
     borderRadius: "1rem",
@@ -319,10 +336,7 @@ export const styles = {
     overflow: "hidden",
     border: "2px solid #B4D2F7",
     padding: "1.5rem",
-    marginTop: "2rem",
-    maxWidth: "900px",
-    width: "100%",
-    animation: "guideSlideIn 1s ease-out 0.5s both"
+    width: "100%"
   },
 
   guideHeader: {
