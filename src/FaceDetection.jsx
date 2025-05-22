@@ -53,6 +53,20 @@ window.isSessionActive = false;
 
 const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
   const navigate = useNavigate();
+  
+  // 컴포넌트 마운트 시 전역 변수 초기화
+  useEffect(() => {
+    window.prvTime = performance.now();
+    window.startTime = Date.now();
+    window.accTime = [0, 0, 0, 0, 0, 0, 0];
+    window.STATE = 0;
+    window.isEyeClosed = false;
+    window.eyeClosedTime = 0;
+    window.isSleeping = false;
+    window.isSessionActive = false;
+    console.log('FaceDetection 컴포넌트 초기화됨');
+  }, []); // 빈 배열로 마운트 시에만 실행
+  
   const [focalLength, setFocalLength] = useState(380);
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
