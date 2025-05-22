@@ -24,7 +24,7 @@ import { accumulateTime } from "./accumulateTime";
 
 //0: 준비 중, 1: 공부 중, 2: 자리 이탈, 3: 수면, 4: 다른 곳 응시
 const ProcessFrame = (
-  cv, canvas, landmarks, focal_length, w, h,
+  cv, canvas, canvasOverlay, landmarks, focal_length, w, h,
   blinkCounter,
   earLogger,
   headAngleVariation,
@@ -34,7 +34,6 @@ const ProcessFrame = (
 ) => {
   scoreLogger(score);
   const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "blue";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
@@ -138,7 +137,7 @@ const ProcessFrame = (
   const left_ear = getEAR(LEpts, yaw, pitch);
   const right_ear = getEAR(REpts, yaw, pitch);
 
-  drawGaze(x, y, z, yaw, pitch);
+  drawGaze(x, y, z, yaw, pitch, canvasOverlay);
   eyeClopen(ctx, landmarks, yaw, pitch, w, h, currentTime);
   blinkCounter(left_ear, right_ear);
   earLogger(left_ear, right_ear);
@@ -149,36 +148,18 @@ const ProcessFrame = (
   window.prvTime = currentTime;
 };
 
-
-var gazeCanvas;
-
-const drawGaze = (tx, ty, tz, yaw, pitch) => {
-  if (gazeCanvas == undefined) {
-    gazeCanvas = document.createElement("canvas");
-    gazeCanvas.style.position = "fixed";
-    gazeCanvas.style.top = "0";
-    gazeCanvas.style.left = "0";
-    gazeCanvas.style.width = "100vw";
-    gazeCanvas.style.height = "100vh";
-    gazeCanvas.style.zIndex = "9999";
-    gazeCanvas.style.pointerEvents = "none";
-
-    gazeCanvas.width = window.innerWidth;
-    gazeCanvas.height = window.innerHeight;
-
-    document.body.appendChild(gazeCanvas);
-  }
-  const ctx = gazeCanvas.getContext("2d");
-  
+const drawGaze = (tx, ty, tz, yaw, pitch, canvas) => {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   let x = tx+Math.tan(yaw)*tz;
   let y = ty+Math.tan(pitch+10/180*Math.PI)*tz;
   if (x < -500 || x > 500 || y < -100) window.STATE = 4;
 
-  ctx.clearRect(0, 0, gazeCanvas.width, gazeCanvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "red";
   ctx.beginPath();
-  ctx.arc(x/25.4*PPI+gazeCanvas.width/2, y/25.4*PPI, 10, 0, 2*Math.PI);
+  ctx.arc(x/25.4*PPI+canvas.width/2, y/25.4*PPI, 10, 0, 2*Math.PI);
   ctx.fill();
 
   ctx.strokeStyle = "red";
@@ -188,13 +169,13 @@ const drawGaze = (tx, ty, tz, yaw, pitch) => {
   for (let i = 0; i <= 360; i += 5) {
     if (i == 0) {
       ctx.moveTo(
-        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+gazeCanvas.width/2,
+        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+canvas.width/2,
         (y+sz*Math.cos(i/180*Math.PI))/25.4*PPI
       );
     }
     else {
       ctx.lineTo(
-        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+gazeCanvas.width/2,
+        (x+sz*Math.sin(i/180*Math.PI))/25.4*PPI+canvas.width/2,
         (y+sz*Math.cos(i/180*Math.PI))/25.4*PPI
       );
     }
