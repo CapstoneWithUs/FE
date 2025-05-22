@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Eye, EyeOff, ActivitySquare, User, Maximize2, Camera, Cpu, Sliders, AlertTriangle, Play } from "lucide-react";
+import { Clock, Eye, EyeOff, ActivitySquare, User, Maximize2, Camera, Cpu, Sliders, AlertTriangle, Play, Monitor, Minimize2 } from "lucide-react";
 import { styles } from './FaceDetectionStyles';
 
 import TimeLineChart from "./TimeLineChart";
@@ -114,7 +114,6 @@ export const StateBadge = ({ state }) => (
   </div>
 );
 
-// 자리 비움 메시지 컴포넌트 추가
 export const AwayMessage = () => (
   <div style={styles.awayMessageContainer}>
     <AlertTriangle size={36} color="#ffcc00" />
@@ -122,13 +121,11 @@ export const AwayMessage = () => (
   </div>
 );
 
-// VideoPanel 컴포넌트를 수정하여 과목명 표시 추가
 export const VideoPanel = ({ videoRef, studyTime, state, subject }) => (
   <div style={styles.videoContainer}>
     <video ref={videoRef} autoPlay playsInline style={styles.video} />
     <TimeBadge position="left" studyTime={studyTime} />
     {state === 2 && <AwayMessage />}
-    {/* 과목명 표시 배지 추가 */}
     {subject && (
       <div style={{
         position: 'absolute',
@@ -154,11 +151,231 @@ export const VideoPanel = ({ videoRef, studyTime, state, subject }) => (
   </div>
 );
 
-// CanvasPanel 컴포넌트에 자리 비움 메시지 추가 (이미 ProcessFrame에서 처리됨)
 export const CanvasPanel = ({ canvasRef, state, studyTime }) => (
   <div style={styles.videoContainer}>
     <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
     <TimeBadge position="right" studyTime={studyTime} />
+  </div>
+);
+
+// PIP 모드 패널 (작은 웹캠과 큰 디버깅 화면)
+export const PIPPanel = ({ videoRef, canvasRef, studyTime, state, subject }) => (
+  <div style={{
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '1rem'
+  }}>
+    {/* 메인 디버깅 화면 */}
+    <div style={styles.videoContainer}>
+      <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
+      <TimeBadge position="right" studyTime={studyTime} />
+    </div>
+    
+    {/* PIP 웹캠 화면 */}
+    <div style={{
+      position: 'relative',
+      width: '240px',
+      height: '180px',
+      border: '2px solid rgba(255, 255, 255, 0.3)',
+      borderRadius: '0.5rem',
+      overflow: 'hidden',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+    }}>
+      <video 
+        ref={videoRef} 
+        autoPlay 
+        playsInline 
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover'
+        }}
+      />
+      {/* PIP 라벨 */}
+      <div style={{
+        position: 'absolute',
+        top: '0.5rem',
+        left: '0.5rem',
+        background: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '0.25rem 0.5rem',
+        borderRadius: '0.25rem',
+        fontSize: '12px',
+        fontWeight: 'bold'
+      }}>
+        <Minimize2 size={12} style={{ display: "inline", marginRight: "0.25rem", verticalAlign: "middle" }} />
+        웹캠
+      </div>
+      {subject && (
+        <div style={{
+          position: 'absolute',
+          bottom: '0.5rem',
+          left: '0.5rem',
+          background: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          padding: '0.25rem 0.5rem',
+          borderRadius: '0.25rem',
+          fontSize: '10px',
+          fontWeight: 'bold'
+        }}>
+          {subject}
+        </div>
+      )}
+      {state === 2 && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(255, 204, 0, 0.9)',
+          color: 'black',
+          padding: '0.25rem 0.5rem',
+          borderRadius: '0.25rem',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }}>
+          자리 비움
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+// 얼굴 화면 OFF 패널 (통계와 상태만 표시)
+export const FaceOffPanel = ({ studyTime, state, subject }) => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '2rem',
+    padding: '2rem',
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '1rem',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    minWidth: '400px'
+  }}>
+    {/* 과목명 표시 */}
+    <div style={{
+      background: 'rgba(59, 130, 246, 0.2)',
+      border: '2px solid rgba(59, 130, 246, 0.5)',
+      borderRadius: '1rem',
+      padding: '1rem 2rem',
+      textAlign: 'center'
+    }}>
+      <h2 style={{
+        margin: 0,
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        color: '#bfdbfe'
+      }}>
+        {subject || 'Blank'}
+      </h2>
+      <p style={{
+        margin: '0.5rem 0 0 0',
+        fontSize: '0.875rem',
+        color: 'rgba(255, 255, 255, 0.7)'
+      }}>
+        현재 과목
+      </p>
+    </div>
+
+    {/* 큰 타이머 */}
+    <div style={{
+      background: 'rgba(16, 185, 129, 0.2)',
+      border: '2px solid rgba(16, 185, 129, 0.5)',
+      borderRadius: '1rem',
+      padding: '2rem',
+      textAlign: 'center',
+      minWidth: '300px'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '1rem',
+        marginBottom: '0.5rem'
+      }}>
+        <Clock size={32} color="#10b981" />
+        <span style={{
+          fontFamily: 'monospace',
+          fontSize: '3rem',
+          fontWeight: 'bold',
+          color: '#10b981'
+        }}>
+          {formatTime(studyTime)}
+        </span>
+      </div>
+      <p style={{
+        margin: 0,
+        fontSize: '1rem',
+        color: 'rgba(255, 255, 255, 0.7)'
+      }}>
+        총 공부 시간
+      </p>
+    </div>
+
+    {/* 현재 상태 */}
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: '2px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      textAlign: 'center',
+      minWidth: '280px'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '1rem',
+        marginBottom: '0.5rem'
+      }}>
+        <div style={{
+          padding: '0.5rem',
+          borderRadius: '50%',
+          background: styles.getStateColor(state),
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {getStateIcon(state)}
+        </div>
+        <span style={{
+          fontSize: '1.5rem',
+          fontWeight: 'bold',
+          color: 'white'
+        }}>
+          {styles.getStateText(state)}
+        </span>
+      </div>
+      <p style={{
+        margin: 0,
+        fontSize: '0.875rem',
+        color: 'rgba(255, 255, 255, 0.7)'
+      }}>
+        현재 상태
+      </p>
+    </div>
+
+    {/* 안내 메시지 */}
+    <div style={{
+      background: 'rgba(107, 114, 128, 0.2)',
+      border: '1px solid rgba(107, 114, 128, 0.3)',
+      borderRadius: '0.5rem',
+      padding: '1rem',
+      textAlign: 'center'
+    }}>
+      <Monitor size={20} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
+      <span style={{
+        fontSize: '0.875rem',
+        color: 'rgba(255, 255, 255, 0.8)'
+      }}>
+        얼굴 화면이 숨겨져 있지만 측정은 계속 진행됩니다
+      </span>
+    </div>
   </div>
 );
 
