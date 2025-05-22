@@ -1,226 +1,106 @@
-/* AddSubjectPage.module.css - 1024x768 Tablet Optimized */
 .container {
-    min-height: 100vh;
-    background-color: #f8f9fa;
-    color: #333333;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-  
-  .topBar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-    padding: 0 0.5rem;
-  }
-  
-  .cancelButton {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #e86161;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    min-height: 44px;
-    min-width: 80px;
-  }
-  
-  .cancelButton:hover,
-  .cancelButton:active {
-    background-color: #ff9595;
-    color: #f50101;
-  }
-  
-  .title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #333333;
-    text-align: center;
-    flex: 1;
-  }
-  
-  .completeButton {
-    font-size: 1.125rem;
-    font-weight: 600;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    min-height: 44px;
-    min-width: 80px;
-    text-align: right;
-  }
-  
-  .completeButton.active {
-    color: #06b6d4;
-  }
-  
-  .completeButton.active:hover,
-  .completeButton.active:active {
-    background-color: #75edb5;
-    color: #059669;
-  }
-  
-  .completeButton.disabled {
-    color: #9ca3af;
-    cursor: not-allowed;
-  }
-  
-  .inputField {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    border-radius: 0.75rem;
-    background-color: #ffffff;
-    color: #333333;
-    border: 2px solid #e5e7eb;
-    padding: 1.25rem 1.5rem;
-    font-size: 1.125rem;
-    outline: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    min-height: 56px;
-  }
-  
-  .inputField::placeholder {
-    color: #9ca3af;
-  }
-  
-  .inputField:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    background-color: #fefefe;
-  }
-  
-  /* 1024x768 태블릿 가로 모드 최적화 */
-  @media (min-width: 1024px) and (max-height: 768px) {
-    .container {
-      padding: 2.5rem 4rem;
-      max-width: 900px;
-      margin: 0 auto;
-      justify-content: center;
-      min-height: calc(100vh - 120px);
-    }
-    
-    .topBar {
-      margin-bottom: 3rem;
-      padding: 0 2rem;
-      max-width: 700px;
-      width: 100%;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    .cancelButton,
-    .completeButton {
-      font-size: 1.25rem;
-      padding: 1rem 1.5rem;
-      min-height: 48px;
-      min-width: 100px;
-    }
-    
-    .title {
-      font-size: 1.375rem;
-      font-weight: 600;
-    }
-    
-    .inputField {
-      padding: 1.5rem 2rem;
-      font-size: 1.25rem;
-      min-height: 64px;
-      max-width: 700px;
-      border-radius: 1rem;
-    }
-  }
-  
-  /* 일반 태블릿 세로 모드 (768px 이상, 1024px 미만) */
-  @media (min-width: 768px) and (max-width: 1023px) {
-    .container {
-      padding: 3rem 3rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    
-    .topBar {
-      margin-bottom: 3rem;
-      padding: 0 1rem;
-    }
-    
-    .cancelButton,
-    .completeButton {
-      font-size: 1.25rem;
-      padding: 1rem 1.25rem;
-      min-height: 48px;
-    }
-    
-    .title {
-      font-size: 1.375rem;
-    }
-    
-    .inputField {
-      padding: 1.5rem 2rem;
-      font-size: 1.25rem;
-      margin-bottom: 2rem;
-      min-height: 64px;
-    }
-  }
-  
-  /* 큰 화면 (1024px 이상, 높이 768px 초과) */
-  @media (min-width: 1024px) and (min-height: 769px) {
-    .container {
-      padding: 4rem 4rem;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    
-    .topBar {
-      margin-bottom: 4rem;
-      padding: 0 1.5rem;
-    }
-    
-    .cancelButton,
-    .completeButton {
-      font-size: 1.375rem;
-      padding: 1.125rem 1.5rem;
-      min-height: 52px;
-    }
-    
-    .title {
-      font-size: 1.5rem;
-    }
-    
-    .inputField {
-      padding: 1.75rem 2.5rem;
-      font-size: 1.375rem;
-      margin-bottom: 2.5rem;
-      min-height: 72px;
-    }
-  }
-  
-  /* 터치 디바이스 최적화 */
-  @media (hover: none) and (pointer: coarse) {
-    .cancelButton:hover,
-    .completeButton:hover {
-      transform: none;
-    }
-    
-    .cancelButton:active,
-    .completeButton.active:active {
-      transform: scale(0.98);
-    }
-    
-    .inputField:focus {
-      transform: scale(1.005);
-    }
-  }
+  min-height: 100vh;
+  background: var(--gradient-subtle);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 2rem;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3rem;
+  padding: 1rem;
+  background: var(--white);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-medium);
+}
+
+.cancelButton {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #E74C3C;
+  background: none;
+  border: 2px solid #E74C3C;
+  cursor: pointer;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  user-select: none;
+  min-height: 44px;
+  min-width: 80px;
+}
+
+.cancelButton:hover {
+  background-color: #E74C3C;
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-blue-dark);
+  text-align: center;
+  flex: 1;
+}
+
+.completeButton {
+  font-size: 1.125rem;
+  font-weight: 600;
+  background: none;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  user-select: none;
+  min-height: 44px;
+  min-width: 80px;
+}
+
+.completeButton.active {
+  color: var(--primary-blue);
+  border-color: var(--primary-blue);
+}
+
+.completeButton.active:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.completeButton.disabled {
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  border-color: var(--medium-gray);
+}
+
+.inputField {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 1rem;
+  background: var(--white);
+  color: var(--text-primary);
+  border: 3px solid var(--primary-blue-light);
+  padding: 1.5rem 2rem;
+  font-size: 1.25rem;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-medium);
+  min-height: 64px;
+}
+
+.inputField::placeholder {
+  color: var(--text-secondary);
+}
+
+.inputField:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.2);
+  transform: translateY(-2px);
+}
