@@ -13,7 +13,11 @@ import {
   UserGuide,
   ScoreGraph,
   EndSessionButton,
-  StartSessionButton
+  StartSessionButton,
+  ModeSelector,
+  MainContentLayout,
+  VideoSection,
+  RightPanel
 } from './FaceDetectionComponents';
 
 import calculateFocusScore from "./calculateFocusScore";
@@ -55,7 +59,7 @@ window.isSessionActive = false;
 
 const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
   const navigate = useNavigate();
-  
+
   // 컴포넌트 마운트 시 전역 변수 초기화
   useEffect(() => {
     window.prvTime = performance.now();
@@ -68,7 +72,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     window.isSessionActive = false;
     console.log('FaceDetection 컴포넌트 초기화됨');
   }, []); // 빈 배열로 마운트 시에만 실행
-  
+
   const [focalLength, setFocalLength] = useState(380);
   const focalRef = useRef(focalLength);
   useEffect(() => { focalRef.current = focalLength; }, [focalLength]);
@@ -91,7 +95,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
       if (displayMode == "pip") canvas.style.backgroundColor = "black";
       if (displayMode == "faceOff") canvas.style.backgroundColor = "black";
     }
-    if (videoRef.current && displayMode == "pip")  videoRef.current.requestPictureInPicture();
+    if (videoRef.current && displayMode == "pip") videoRef.current.requestPictureInPicture();
   }, [displayMode]);
 
   const canvasRef = useRef(null);
@@ -131,7 +135,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     window.eyeClosedTime = 0;
     window.isSleeping = false;
     window.isSessionActive = true;
-    
+
     setSessionActive(true);
     console.log('측정 시작됨:', currentSubject);
   };
@@ -154,7 +158,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     console.log('전송할 세션 데이터:', sessionData);
 
     const timeScorePromises = [];
-    
+
     if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
       for (let i = 0; i < scoreLog.current[0].length; i++) {
         const { time, value } = scoreLog.current[0][i];
@@ -162,9 +166,9 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
           eachTime: time,
           eachScore: value,
         };
-        
+
         console.log('점수 데이터: ', scoreData);
-        
+
         const promise = fetch('https://be-production-1350.up.railway.app/set-time-score-array-data', {
           method: 'POST',
           headers: {
@@ -184,7 +188,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
           console.error('시간-점수 데이터 전송 실패:', error);
           return null;
         });
-        
+
         timeScorePromises.push(promise);
       }
     }
@@ -224,7 +228,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     if (!scoreLog.current || !scoreLog.current[0] || scoreLog.current[0].length === 0) {
       return 0;
     }
-    
+
     const scores = scoreLog.current[0];
     const sum = scores.reduce((total, item) => total + item.value, 0);
     return Math.round(sum / scores.length);
@@ -303,7 +307,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
         requestAnimationFrame(detectFaces);
         return;
       }
-      
+
       if (!sessionActive || !window.isSessionActive) {
         requestAnimationFrame(detectFaces);
         return;
@@ -337,160 +341,159 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     requestAnimationFrame(detectFaces);
   }, [faceLandmarker, sessionActive]);
 
+  const handleModeChange = (mode) => {
+    // displayMode 변경 로직은 FocusTrackerPage에서 처리
+  };
+
   return (
     <div style={styles.container}>
       <style>{styles.globalCss}</style>
 
+      <ModeSelector displayMode={displayMode} onModeChange={handleModeChange} />
       <Header />
 
       {loading ? (
         <LoadingScreen />
       ) : (
-        <>
-          <div style={styles.mainContent}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div style={styles.videoContainer}>
-                <video ref={videoRef} autoPlay playsInline style={styles.video} />
-                <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
-                
-          {displayMode === 'faceOff' && (
-            <>
-              <div style={{
-                position: 'absolute',
-                top: 10,
-                left: 170,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '2rem',
-                padding: '2rem'
-              }}>
-                {/* 과목명 */}
+        <MainContentLayout>
+          {/* 왼쪽: 비디오 섹션 */}
+          <VideoSection>
+            <div style={styles.videoContainer}>
+              <video ref={videoRef} autoPlay playsInline style={styles.video} />
+              <canvas ref={canvasRef} width="640" height="480" style={styles.canvas} />
+
+              {displayMode === 'faceOff' && (
                 <div style={{
-                  background: 'rgba(59, 130, 246, 0.2)',
-                  border: '2px solid rgba(59, 130, 246, 0.5)',
-                  borderRadius: '1rem',
-                  padding: '1rem 2rem',
-                  textAlign: 'center'
+                  position: 'absolute',
+                  top: 10,
+                  left: 170,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2rem',
+                  padding: '2rem'
                 }}>
-                  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#bfdbfe' }}>
-                    {currentSubject}
-                  </h2>
-                </div>
-
-                {/* 큰 타이머 */}
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.2)',
-                  border: '2px solid rgba(16, 185, 129, 0.5)',
-                  borderRadius: '1rem',
-                  padding: '2rem',
-                  textAlign: 'center'
-                }}>
-                  <span style={{
-                    fontFamily: 'monospace',
-                    fontSize: '3rem',
-                    fontWeight: 'bold',
-                    color: '#10b981'
-                  }}>
-                    {(() => {
-                      const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                      const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                      const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                      const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                      return `${hours}:${minutes}:${seconds}`;
-                    })()}
-                  </span>
-                  <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
-                    총 공부 시간
-                  </p>
-                </div>
-
-                {/* 현재 상태 */}
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '2px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '1rem',
-                  padding: '1.5rem',
-                  textAlign: 'center'
-                }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
-                    {(() => {
-                      switch(stateInfo.state) {
-                        case 0: return '준비 중';
-                        case 1: return '공부 중';
-                        case 2: return '자리 이탈';
-                        case 3: return '수면';
-                        case 4: return '다른 곳 응시';
-                        default: return '준비 중';
-                      }
-                    })()}
-                  </span>
-                  <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
-                    현재 상태
-                  </p>
-                </div>
-              </div>
-              
-            </>
-          )}
-
-
-                <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
-                  <span style={{ 
-                    fontFamily: "monospace", 
-                    fontSize: "1.25rem", 
-                    color: "#ff0000", 
-                    fontWeight: "bold" 
-                  }}>
-                    {(() => {
-                      const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
-                      const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
-                      const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-                      const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-                      return `${hours}:${minutes}:${seconds}`;
-                    })()}
-                  </span>
-                </div>
-                {stateInfo.state === 2 && (
-                  <div style={styles.awayMessageContainer}>
-                    <p style={styles.awayMessageText}>자리를 비웠습니다</p>
-                  </div>
-                )}
-                {currentSubject && (
+                  {/* 과목명 */}
                   <div style={{
-                    position: 'absolute',
-                    top: '40px',
-                    left: '1rem',
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    color: 'white',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
+                    background: 'rgba(59, 130, 246, 0.2)',
+                    border: '2px solid rgba(59, 130, 246, 0.5)',
+                    borderRadius: '1rem',
+                    padding: '1rem 2rem',
+                    textAlign: 'center'
                   }}>
-                    과목: {currentSubject}
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#bfdbfe' }}>
+                      {currentSubject}
+                    </h2>
                   </div>
-                )}
+
+                  {/* 큰 타이머 */}
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.2)',
+                    border: '2px solid rgba(16, 185, 129, 0.5)',
+                    borderRadius: '1rem',
+                    padding: '2rem',
+                    textAlign: 'center'
+                  }}>
+                    <span style={{
+                      fontFamily: 'monospace',
+                      fontSize: '3rem',
+                      fontWeight: 'bold',
+                      color: '#10b981'
+                    }}>
+                      {(() => {
+                        const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
+                        const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                        const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                        const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                        return `${hours}:${minutes}:${seconds}`;
+                      })()}
+                    </span>
+                    <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      총 공부 시간
+                    </p>
+                  </div>
+
+                  {/* 현재 상태 */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '1rem',
+                    padding: '1.5rem',
+                    textAlign: 'center'
+                  }}>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
+                      {(() => {
+                        switch (stateInfo.state) {
+                          case 0: return '준비 중';
+                          case 1: return '공부 중';
+                          case 2: return '자리 이탈';
+                          case 3: return '수면';
+                          case 4: return '다른 곳 응시';
+                          default: return '준비 중';
+                        }
+                      })()}
+                    </span>
+                    <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      현재 상태
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ ...styles.badge, top: "1rem", left: "1rem" }}>
+                <span style={{
+                  fontFamily: "monospace",
+                  fontSize: "1.25rem",
+                  color: "#FFFFFF",
+                  fontWeight: "bold"
+                }}>
+                  {(() => {
+                    const ms = stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0);
+                    const hours = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                    const minutes = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                    const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                    return `${hours}:${minutes}:${seconds}`;
+                  })()}
+                </span>
               </div>
-              <FocalLengthSlider focalLength={focalLength} setFocalLength={setFocalLength} />
+
+              {stateInfo.state === 2 && (
+                <div style={styles.awayMessageContainer}>
+                  <p style={styles.awayMessageText}>자리를 비웠습니다</p>
+                </div>
+              )}
+
+              {currentSubject && (
+                <div style={{
+                  position: 'absolute',
+                  top: '40px',
+                  left: '1rem',
+                  background: 'linear-gradient(135deg, rgba(91, 155, 213, 0.95) 0%, rgba(68, 114, 196, 0.9) 100%)',
+                  color: '#FFFFFF',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>
+                  과목: {currentSubject}
+                </div>
+              )}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <StatsCards studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)} sleepTime={stateInfo.accTime[5]} />
-            </div>
-          </div>
-        </>
+          </VideoSection>
+
+          {/* 오른쪽: 컨트롤 패널 */}
+          <RightPanel
+            studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)}
+            sleepTime={stateInfo.accTime[5]}
+            focalLength={focalLength}
+            setFocalLength={setFocalLength}
+            sessionActive={sessionActive}
+            onStartSession={startSession}
+            onEndSession={sendSessionDataToBackend}
+          />
+        </MainContentLayout>
       )}
-      
-      <UserGuide />
-      
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-        {!sessionActive ? (
-          <StartSessionButton onStartSession={startSession} />
-        ) : (
-          <EndSessionButton onEndSession={sendSessionDataToBackend} />
-        )}
-      </div>
-      
+
       {/* 디버깅 화면일 때만 ScoreGraph 표시 */}
       {displayMode === 'debug' && (
         <ScoreGraph
