@@ -40,25 +40,29 @@ function Header() {
           className={`${styles.navButton} ${isActive('/') ? styles.active : ''}`}
           onClick={() => navigate('/')}
         >
-          홈
+          <span className={styles.navIcon}>🏠</span>
+          <span className={styles.navLabel}>홈</span>
         </button>
         <button
           className={`${styles.navButton} ${isActive('/statistics') ? styles.active : ''}`}
           onClick={() => navigate('/statistics')}
         >
-          통계
+          <span className={styles.navIcon}>📊</span>
+          <span className={styles.navLabel}>통계</span>
         </button>
         <button
           className={`${styles.navButton} ${isActive('/RankingPage') ? styles.active : ''}`}
           onClick={() => navigate('/RankingPage')}
         >
-          랭킹
+          <span className={styles.navIcon}>🏆</span>
+          <span className={styles.navLabel}>랭킹</span>
         </button>
         <button
           className={`${styles.navButton} ${isActive('/SettingPage') ? styles.active : ''}`}
           onClick={() => navigate('/SettingPage')}
         >
-          더보기
+          <span className={styles.navIcon}>⚙️</span>
+          <span className={styles.navLabel}>더보기</span>
         </button>
       </nav>
     </header>
