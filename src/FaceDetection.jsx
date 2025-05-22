@@ -89,7 +89,9 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     displayModeRef.current = displayMode;
     if (canvasRef.current) {
       const canvas = canvasRef.current;
+      const canvasOverlay = canvasOverlayRef.current;
       canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      canvasOverlay.getContext("2d").clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
       if (displayMode == "webcam") canvas.style.backgroundColor = "transparent";
       if (displayMode == "debug") canvas.style.backgroundColor = "blue";
       if (displayMode == "pip") canvas.style.backgroundColor = "black";
@@ -263,8 +265,8 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
               modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
               delegate: "GPU"
             },
-            minFaceDetectionConfidence: 0.7,
-            minFacePresenceConfidence: 0.7,
+            minFaceDetectionConfidence: 0.9,
+            minFacePresenceConfidence: 0.9,
             outputFaceBlendshapes: false,
             runningMode: "VIDEO",
             numFaces: 1
@@ -336,7 +338,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
         score,
         scoreLogger,
       );
-      setTimeout(() => requestAnimationFrame(detectFaces), 100);
+      setTimeout(() => requestAnimationFrame(detectFaces), 50);
     };
     requestAnimationFrame(detectFaces);
   }, [faceLandmarker, sessionActive]);
