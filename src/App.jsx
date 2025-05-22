@@ -19,9 +19,8 @@ function App() {
   return (
     <BrowserRouter>
       <Header />
-      <div className="flex-1 pt-24 pb-20 bg-gray-100 min-h-screen">
         <Routes>
-          <Route path="/HomePage" element={<HomePage />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/landingPage" element={<LandingPage />} />
           <Route path="/loginPage" element={<LoginPage />} />
           <Route path="/signupPage" element={<SignupPage />} />
@@ -34,7 +33,6 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/statistics" element={<ShowStatistics />} />
         </Routes>
-      </div>
       <Navbar />
     </BrowserRouter>
   );

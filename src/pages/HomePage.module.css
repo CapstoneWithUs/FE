@@ -1,0 +1,143 @@
+/* HomePage.module.css - Tablet Optimized */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  background-color: #f8f9fa;
+  color: #333333;
+  padding: 2rem 2rem;
+  padding-bottom: 8rem;
+}
+
+.addButton {
+  width: 100%;
+  max-width: 20rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  background-color: #ffffff;
+  color: #333333;
+  padding: 1rem 2rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  min-height: 48px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addButton:hover,
+.addButton:active {
+  background-color: #6366f1;
+  color: white;
+  border-color: #6366f1;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.subjectList {
+  width: 100%;
+  max-width: 32rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.subjectButton {
+  width: 100%;
+  background-color: #9ca3af;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+  min-height: 56px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.subjectButton:hover,
+.subjectButton:active {
+  background-color: #6366f1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+}
+
+/* 태블릿 세로 모드 (768px 이상) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    padding: 3rem 3rem;
+    padding-bottom: 10rem;
+  }
+  
+  .addButton {
+    font-size: 1.125rem;
+    padding: 1.125rem 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .subjectList {
+    max-width: 36rem;
+    gap: 1.25rem;
+  }
+  
+  .subjectButton {
+    padding: 1.5rem 2rem;
+    font-size: 1.25rem;
+    min-height: 64px;
+  }
+}
+
+/* 태블릿 가로 모드 (1024px 이상) */
+@media (min-width: 1024px) {
+  .container {
+    padding: 4rem 4rem;
+    padding-bottom: 12rem;
+  }
+  
+  .addButton {
+    font-size: 1.125rem;
+    padding: 1.25rem 3rem;
+    margin-bottom: 3rem;
+  }
+  
+  .subjectList {
+    max-width: 40rem;
+    gap: 1.5rem;
+  }
+  
+  .subjectButton {
+    padding: 1.75rem 2.5rem;
+    font-size: 1.375rem;
+    min-height: 72px;
+  }
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .addButton:hover {
+    transform: none;
+  }
+  
+  .subjectButton:hover {
+    transform: none;
+  }
+  
+  .addButton:active {
+    transform: scale(0.98);
+  }
+  
+  .subjectButton:active {
+    transform: scale(0.98);
+  }
+}
