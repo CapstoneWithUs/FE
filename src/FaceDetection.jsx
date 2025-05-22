@@ -83,6 +83,17 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     subject || localStorage.getItem('currentSubject') || 'Blank'
   );
 
+  // displayMode에 따른 표시용 video ref들
+  const displayVideoRef = useRef(null);
+  const displayCanvasRef = useRef(null);
+
+  // 표시용 비디오에 스트림 연결 (한 번만)
+  useEffect(() => {
+    if (displayVideoRef.current && videoRef.current?.srcObject) {
+      displayVideoRef.current.srcObject = videoRef.current.srcObject;
+    }
+  }, [videoRef.current?.srcObject, displayMode]);
+
   useEffect(() => {
     if (subject) {
       setCurrentSubject(subject);
@@ -324,14 +335,10 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div style={styles.videoContainer}>
                   <video 
+                    ref={displayVideoRef}
                     autoPlay 
                     playsInline 
                     style={styles.video}
-                    ref={(el) => {
-                      if (el && videoRef.current?.srcObject) {
-                        el.srcObject = videoRef.current.srcObject;
-                      }
-                    }}
                   />
                   <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
                     <span style={{ 
@@ -384,14 +391,10 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div style={styles.videoContainer}>
                   <video 
+                    ref={displayVideoRef}
                     autoPlay 
                     playsInline 
                     style={styles.video}
-                    ref={(el) => {
-                      if (el && videoRef.current?.srcObject) {
-                        el.srcObject = videoRef.current.srcObject;
-                      }
-                    }}
                   />
                   <div style={{...styles.badge, top: "1rem", left: "1rem"}}>
                     <span style={{ 
@@ -512,17 +515,17 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
                   position: 'relative'
                 }}>
                   <video 
+                    ref={(el) => {
+                      if (el && videoRef.current?.srcObject && el !== displayVideoRef.current) {
+                        el.srcObject = videoRef.current.srcObject;
+                      }
+                    }}
                     autoPlay 
                     playsInline 
                     style={{
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover'
-                    }}
-                    ref={(el) => {
-                      if (el && videoRef.current?.srcObject) {
-                        el.srcObject = videoRef.current.srcObject;
-                      }
                     }}
                   />
                   <div style={{
