@@ -167,6 +167,7 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
         const scoreData = {
           eachTime: time,
           eachScore: value,
+          subjectName: currentSubject,
         };
 
         console.log('점수 데이터: ', scoreData);
