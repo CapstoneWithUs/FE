@@ -57,7 +57,7 @@ window.eyeClosedTime = 0;
 window.isSleeping = false;
 window.isSessionActive = false;
 
-const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
+const FaceDetection = ({ subject, displayMode = 'webcam', onSessionStatusChange}) => {
   const navigate = useNavigate();
 
   // 컴포넌트 마운트 시 전역 변수 초기화
@@ -139,6 +139,10 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     window.isSessionActive = true;
 
     setSessionActive(true);
+    //상위 컴포넌트에 세션 시작 알림
+    if (onSessionStatusChange) {
+      onSessionStatusChange(true);
+    }
     console.log('측정 시작됨:', currentSubject);
   };
 
@@ -158,6 +162,11 @@ const FaceDetection = ({ subject, displayMode = 'webcam' }) => {
     };
 
     console.log('전송할 세션 데이터:', sessionData);
+
+    //상위 컴포넌트에 세션 종료 알림
+    if (onSessionStatusChange) {
+      onSessionStatusChange(false);
+    }
 
     const timeScorePromises = [];
 
