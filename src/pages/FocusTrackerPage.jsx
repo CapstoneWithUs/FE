@@ -22,6 +22,59 @@ const FocusTrackerPage = () => {
     console.log('FocusTrackerPage: 과목명 수신:', subject);
     localStorage.setItem('currentSubject', subject);
   }
+  
+    // 네비게이션 버튼 클릭 차단 기능
+    useEffect(() => {
+      const handleNavigationClick = (event) => {
+        // 측정 중이 아니면 그냥 진행
+        if (!sessionActive) return;
+  
+        // 네비게이션 관련 버튼들을 찾아서 차단
+        const target = event.target;
+        const isNavigationButton = 
+          target.closest('[class*="navButton"]') || // Header의 네비게이션 버튼들
+          target.closest('button[onclick*="navigate"]') || // navigate 함수를 사용하는 버튼들
+          target.closest('a[href]'); // 링크들
+  
+        if (isNavigationButton) {
+          console.log('네비게이션 버튼 클릭 감지됨');
+          
+          // 기본 동작 차단
+          event.preventDefault();
+          event.stopPropagation();
+          
+          // 경고창 표시
+          const confirmNavigation = window.confirm(
+            '측정 중입니다. 페이지를 나가면 데이터가 손실될 수 있습니다.\n정말로 나가시겠습니까?'
+          );
+          
+          if (confirmNavigation) {
+            console.log('사용자가 네비게이션을 확인함');
+            // 실제 네비게이션 실행 (원래 클릭 이벤트 다시 실행)
+            const originalOnClick = target.onclick || target.closest('button').onclick;
+            if (originalOnClick) {
+              originalOnClick();
+            }
+          } else {
+            console.log('사용자가 네비게이션을 취소함');
+          }
+        }
+      };
+  
+      // 측정 중일 때만 이벤트 리스너 등록
+      if (sessionActive) {
+        document.addEventListener('click', handleNavigationClick, true); // capture 단계에서 처리
+        console.log('네비게이션 클릭 차단 이벤트 리스너 등록됨');
+      } else {
+        document.removeEventListener('click', handleNavigationClick, true);
+        console.log('네비게이션 클릭 차단 이벤트 리스너 해제됨');
+      }
+  
+      return () => {
+        document.removeEventListener('click', handleNavigationClick, true);
+        console.log('네비게이션 클릭 차단 이벤트 리스너 정리됨');
+      };
+    }, [sessionActive]);
 
   useEffect(() => {
     const handleBeforeUnload = (event) => {
