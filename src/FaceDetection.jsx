@@ -1,4 +1,3 @@
-// ✅ 추가된 import
 import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
 import { useNavigate } from 'react-router-dom';
@@ -48,7 +47,7 @@ const LoadCV = async () => {
   }
 };
 
-// 이 window 객체에 전역 변수 선언
+// 전역 변수 초기화
 window.prvTime = performance.now();
 window.startTime = Date.now();
 window.accTime = [0, 0, 0, 0, 0, 0, 0];
@@ -58,7 +57,6 @@ window.eyeClosedTime = 0;
 window.isSleeping = false;
 window.isSessionActive = false;
 
-// forwardRef 추가
 const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionStatusChange, onNormalExit }, ref) => {
   const navigate = useNavigate();
 
@@ -73,7 +71,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
     window.isSleeping = false;
     window.isSessionActive = false;
     console.log('FaceDetection 컴포넌트 초기화됨');
-  }, []); // 빈 배열로 마운트 시에만 실행
+  }, []);
 
   const [focalLength, setFocalLength] = useState(380);
   const focalRef = useRef(focalLength);
@@ -130,7 +128,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
     }
   }, [subject]);
 
-  // useImperativeHandle로 외부 함수 노출
+  // 외부에서 호출 가능한 함수들 정의
   useImperativeHandle(ref, () => ({
     saveSessionData: () => {
       return new Promise((resolve, reject) => {
@@ -174,7 +172,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
     window.isSessionActive = true;
 
     setSessionActive(true);
-    //상위 컴포넌트에 세션 시작 알림
+    // 상위 컴포넌트에 세션 시작 알림
     if (onSessionStatusChange) {
       onSessionStatusChange(true);
     }
@@ -205,7 +203,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
       console.log('전송할 세션 데이터:', sessionData);
 
-      //상위 컴포넌트에 세션 종료 알림
+      // 상위 컴포넌트에 세션 종료 알림
       if (onSessionStatusChange) {
         onSessionStatusChange(false);
       }
@@ -270,18 +268,19 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
         })
         .then(() => {
           console.log('모든 데이터 저장 완료');
-          resolve(); // Promise resolve
+          resolve();
         })
         .catch(error => {
           console.error('세션 데이터 전송 실패:', error);
           if (onSessionStatusChange) {
             onSessionStatusChange(true); // 세션을 다시 활성화
           }
-          reject(error); // Promise reject
+          reject(error);
         });
     });
   };
 
+  // 내부 버튼용 저장 함수
   const sendSessionDataToBackend = () => {
     if (onNormalExit) {
       onNormalExit();
@@ -303,7 +302,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
     console.log('전송할 세션 데이터:', sessionData);
 
-    //상위 컴포넌트에 세션 종료 알림
+    // 상위 컴포넌트에 세션 종료 알림
     if (onSessionStatusChange) {
       onSessionStatusChange(false);
     }
@@ -496,22 +495,23 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
     requestAnimationFrame(detectFaces);
   }, [faceLandmarker, sessionActive]);
 
-  const handleModeChange = (mode) => {
-    // displayMode 변경 로직은 FocusTrackerPage에서 처리
-  };
+  // [삭제] 빈 함수였던 handleModeChange 함수 제거
+  // const handleModeChange = (mode) => {
+  //   // displayMode 변경 로직은 FocusTrackerPage에서 처리
+  // };
 
   return (
     <div style={styles.container}>
       <style>{styles.globalCss}</style>
 
-      <ModeSelector displayMode={displayMode} onModeChange={handleModeChange} />
+      {/* [수정] onModeChange props에서 빈 함수 대신 undefined 전달 */}
+      <ModeSelector displayMode={displayMode} onModeChange={undefined} />
       <Header />
 
       {loading ? (
         <LoadingScreen />
       ) : (
         <MainContentLayout>
-          {/* 왼쪽: 비디오 섹션 */}
           <VideoSection>
             <div style={styles.videoContainer}>
               <video ref={videoRef} autoPlay playsInline style={styles.video} />
@@ -636,7 +636,6 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
             </div>
           </VideoSection>
 
-          {/* 오른쪽: 컨트롤 패널 */}
           <RightPanel
             studyTime={stateInfo.accTime.slice(0, 4).reduce((acc, cur) => acc + cur, 0)}
             sleepTime={stateInfo.accTime[5]}
@@ -665,7 +664,6 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
   );
 });
 
-// forwardRef displayName 설정
 FaceDetection.displayName = 'FaceDetection';
 
 export default FaceDetection;
