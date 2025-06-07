@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState } from "react";
+// ✅ 추가된 import
+import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
 import { useNavigate } from 'react-router-dom';
 import ProcessFrame from "./ProcessFrame";
@@ -57,7 +58,8 @@ window.eyeClosedTime = 0;
 window.isSleeping = false;
 window.isSessionActive = false;
 
-const FaceDetection = ({ subject, displayMode = 'webcam', onSessionStatusChange}) => {
+// forwardRef 추가
+const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionStatusChange, onNormalExit }, ref) => {
   const navigate = useNavigate();
 
   // 컴포넌트 마운트 시 전역 변수 초기화
@@ -128,6 +130,39 @@ const FaceDetection = ({ subject, displayMode = 'webcam', onSessionStatusChange}
     }
   }, [subject]);
 
+  // useImperativeHandle로 외부 함수 노출
+  useImperativeHandle(ref, () => ({
+    saveSessionData: () => {
+      return new Promise((resolve, reject) => {
+        try {
+          console.log('외부에서 저장 함수 호출됨');
+          sendSessionDataToBackendAsync()
+            .then(() => resolve())
+            .catch((error) => reject(error));
+        } catch (error) {
+          console.error('저장 함수 호출 중 오류:', error);
+          reject(error);
+        }
+      });
+    },
+    getSessionData: () => {
+      return {
+        gradeATime: Number(window.accTime[0]) || 0,
+        gradeBTime: Number(window.accTime[1]) || 0,
+        gradeCTime: Number(window.accTime[2]) || 0,
+        gradeDTime: Number(window.accTime[3]) || 0,
+        sleepTime: Number(window.accTime[5]) || 0,
+        gazeAwayTime: Number(window.accTime[6]) || 0,
+        absenceTime: Number(window.accTime[4]) || 0,
+        focusScore: calculateAverageFocusScore(),
+        startTime: Number(window.startTime) || 0,
+        endTime: Number(Date.now()),
+        subjectName: currentSubject,
+      };
+    },
+    isSessionActive: () => sessionActive
+  }), [sessionActive, currentSubject]);
+
   const startSession = () => {
     window.prvTime = performance.now();
     window.startTime = Date.now();
@@ -146,7 +181,112 @@ const FaceDetection = ({ subject, displayMode = 'webcam', onSessionStatusChange}
     console.log('측정 시작됨:', currentSubject);
   };
 
+  // Promise 기반 저장 함수 (외부 호출용)
+  const sendSessionDataToBackendAsync = () => {
+    return new Promise((resolve, reject) => {
+      if (onNormalExit) {
+        onNormalExit();
+        console.log('외부 저장 시 정상 종료 콜백 호출됨');
+      }
+
+      const sessionData = {
+        gradeATime: Number(window.accTime[0]) || 0,
+        gradeBTime: Number(window.accTime[1]) || 0,
+        gradeCTime: Number(window.accTime[2]) || 0,
+        gradeDTime: Number(window.accTime[3]) || 0,
+        sleepTime: Number(window.accTime[5]) || 0,
+        gazeAwayTime: Number(window.accTime[6]) || 0,
+        absenceTime: Number(window.accTime[4]) || 0,
+        focusScore: calculateAverageFocusScore(),
+        startTime: Number(window.startTime) || 0,
+        endTime: Number(Date.now()),
+        subjectName: currentSubject,
+      };
+
+      console.log('전송할 세션 데이터:', sessionData);
+
+      //상위 컴포넌트에 세션 종료 알림
+      if (onSessionStatusChange) {
+        onSessionStatusChange(false);
+      }
+
+      const timeScorePromises = [];
+
+      if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
+        for (let i = 0; i < scoreLog.current[0].length; i++) {
+          const { time, value } = scoreLog.current[0][i];
+          const scoreData = {
+            eachTime: time,
+            eachScore: value,
+            subjectName: currentSubject,
+          };
+
+          console.log('점수 데이터: ', scoreData);
+
+          const promise = fetch('https://be-production-1350.up.railway.app/set-time-score-array-data', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(scoreData),
+            credentials: 'include'
+          }).then(response => {
+            if (!response.ok) {
+              return response.text().then(text => {
+                console.error(`시간-점수 데이터 전송 오류! 상태: ${response.status}, 응답: ${text}`);
+                throw new Error(`시간-점수 데이터 전송 오류! 상태: ${response.status}`);
+              });
+            }
+            return response;
+          }).catch(error => {
+            console.error('시간-점수 데이터 전송 실패:', error);
+            return null;
+          });
+
+          timeScorePromises.push(promise);
+        }
+      }
+
+      fetch('https://be-production-1350.up.railway.app/set-statistics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(sessionData),
+        credentials: 'include'
+      })
+        .then(response => {
+          if (!response.ok) {
+            return response.text().then(text => {
+              console.error(`HTTP 오류! 상태: ${response.status}, 응답: ${text}`);
+              throw new Error(`HTTP 오류! 상태: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('세션 데이터 전송 성공:', data);
+          return Promise.allSettled(timeScorePromises);
+        })
+        .then(() => {
+          console.log('모든 데이터 저장 완료');
+          resolve(); // Promise resolve
+        })
+        .catch(error => {
+          console.error('세션 데이터 전송 실패:', error);
+          if (onSessionStatusChange) {
+            onSessionStatusChange(true); // 세션을 다시 활성화
+          }
+          reject(error); // Promise reject
+        });
+    });
+  };
+
   const sendSessionDataToBackend = () => {
+    if (onNormalExit) {
+      onNormalExit();
+      console.log('정상 종료 콜백 호출됨');
+    }
     const sessionData = {
       gradeATime: Number(window.accTime[0]) || 0,
       gradeBTime: Number(window.accTime[1]) || 0,
@@ -233,6 +373,9 @@ const FaceDetection = ({ subject, displayMode = 'webcam', onSessionStatusChange}
       .catch(error => {
         console.error('세션 데이터 전송 실패:', error);
         alert("세션 데이터 전송에 실패했습니다. 개발자 도구에서 자세한 오류를 확인하세요.");
+        if (onSessionStatusChange) {
+          onSessionStatusChange(true); // 세션을 다시 활성화
+        }
       });
   };
 
@@ -520,6 +663,9 @@ const FaceDetection = ({ subject, displayMode = 'webcam', onSessionStatusChange}
       )}
     </div>
   );
-};
+});
+
+// forwardRef displayName 설정
+FaceDetection.displayName = 'FaceDetection';
 
 export default FaceDetection;
