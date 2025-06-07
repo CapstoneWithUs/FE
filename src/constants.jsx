@@ -19,7 +19,7 @@ const PPI = 96
 const EAR_THRESHOLD = 0.15;
 
 const GRAPH_INTERVAL = 60000;
-const SCORE_LOG_TERM = 60000;
+const SCORE_LOG_TERM = 30000;
 const SLEEP_THRESHOLD = 5000;
 
 export {
