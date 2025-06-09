@@ -210,14 +210,17 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
       const timeScorePromises = [];
 
-      if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
-        for (let i = 0; i < scoreLog.current[0].length; i++) {
-          const { time, value } = scoreLog.current[0][i];
-          const scoreData = {
-            eachTime: time,
-            eachScore: value,
-            subjectName: currentSubject,
-          };
+      if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {      const timeScoreData = Array.from(
+        new Map(scoreLog.current[0].map(p => [p.time, p])).values()
+      );
+     
+      for (let i = 0; i < timeScoreData.length; i++) {
+        const { time, value } = timeScoreData[i];
+        const scoreData = {
+          eachTime: time,
+          eachScore: value,
+          subjectName: currentSubject,
+        };
 
           console.log('점수 데이터: ', scoreData);
 
@@ -309,14 +312,17 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
     const timeScorePromises = [];
 
-    if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
-      for (let i = 0; i < scoreLog.current[0].length; i++) {
-        const { time, value } = scoreLog.current[0][i];
-        const scoreData = {
-          eachTime: time,
-          eachScore: value,
-          subjectName: currentSubject,
-        };
+    if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {      const timeScoreData = Array.from(
+      new Map(scoreLog.current[0].map(p => [p.time, p])).values()
+    );
+   
+    for (let i = 0; i < timeScoreData.length; i++) {
+      const { time, value } = timeScoreData[i];
+      const scoreData = {
+        eachTime: time,
+        eachScore: value,
+        subjectName: currentSubject,
+      };
 
         console.log('점수 데이터: ', scoreData);
 
