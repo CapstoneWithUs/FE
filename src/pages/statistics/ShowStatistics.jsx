@@ -21,6 +21,9 @@ const ShowStatistics = () => {
   const [gradeScore, setGradeScore] = useState(0);
   const [filteredStatistics, setFilteredStatistics] = useState([]);
 
+    // 기간별 탭 상태 관리
+    const [selectedPeriod, setSelectedPeriod] = useState('daily'); // daily, weekly, monthly
+
   // 과목명을 localStorage에 저장 (페이지 새로고침 시 유지하기 위해)
   useEffect(() => {
     if (location.state?.subject) {
@@ -313,6 +316,11 @@ const ShowStatistics = () => {
     setSelectedSubject(e.target.value);
   };
 
+  // 기간 탭 선택 핸들러
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -379,6 +387,30 @@ const ShowStatistics = () => {
   return (
     <div className="statistics-container">
       <h1 className="page-title">학습 통계</h1>
+
+      {/* 기간별 탭 UI */}
+      <div className="period-tabs">
+        <div className="tab-container">
+          <button
+            className={`tab-button ${selectedPeriod === 'daily' ? 'active' : ''}`}
+            onClick={() => handlePeriodChange('daily')}
+          >
+            일간
+          </button>
+          <button
+            className={`tab-button ${selectedPeriod === 'weekly' ? 'active' : ''}`}
+            onClick={() => handlePeriodChange('weekly')}
+          >
+            주간
+          </button>
+          <button
+            className={`tab-button ${selectedPeriod === 'monthly' ? 'active' : ''}`}
+            onClick={() => handlePeriodChange('monthly')}
+          >
+            월간
+          </button>
+        </div>
+      </div>
       
       {/* 과목 선택 드롭다운 */}
       <div className="subject-selector">
