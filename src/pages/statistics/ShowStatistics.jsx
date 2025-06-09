@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './ShowStatistics.css'; // CSS 파일 임포트
@@ -21,11 +21,16 @@ const ShowStatistics = () => {
   const [gradeScore, setGradeScore] = useState(0);
   const [filteredStatistics, setFilteredStatistics] = useState([]);
 
+  // 로딩 상태 세분화 및 요청 중복 방지를 위한 상태
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [lastFetchParams, setLastFetchParams] = useState(null);
+
   // 기간별 탭 상태 관리
   const [selectedPeriod, setSelectedPeriod] = useState('daily'); // daily, weekly, monthly
 
-  // 간별 데이터 계산 유틸리티 함수들
-  const getDateRange = (period) => {
+  // 성능 최적화를 위한 memoized 유틸리티 함수
+  const getDateRange = useCallback((period) => {
     const now = new Date();
     let startTime, endTime;
 
@@ -69,7 +74,7 @@ const ShowStatistics = () => {
     });
 
     return { startTimestamp, endTimestamp };
-  };
+  }, []); // 의존성 없음 - 순수 함수
 
   // 과목명을 localStorage에 저장 (페이지 새로고침 시 유지하기 위해)
   useEffect(() => {
@@ -79,9 +84,8 @@ const ShowStatistics = () => {
     }
   }, [location.state]);
 
-  // 임시로 기존 API만 사용하도록 수정 (새로운 API 문제 해결 시까지)
-  // 기간별 + 과목별 통계 데이터 가져오기 - 기존 API 사용 + 클라이언트 필터링
-  const fetchStatisticsByPeriodAndSubject = async (period, subject) => {
+  // memoized API 함수들로 성능 최적화
+  const fetchStatisticsByPeriodAndSubject = useCallback(async (period, subject) => {
     try {
       const { startTimestamp, endTimestamp } = getDateRange(period);
       
@@ -122,10 +126,9 @@ const ShowStatistics = () => {
       console.error('통계 데이터 불러오기 오류:', err);
       throw new Error('통계 데이터를 불러오는데 문제가 발생했습니다.');
     }
-  };
+  }, [getDateRange]);
 
-  // 기간별 + 과목별 시간-점수 데이터 가져오기 - 기존 API 사용 + 클라이언트 필터링
-  const fetchTimeScoreDataByPeriodAndSubject = async (period, subject) => {
+  const fetchTimeScoreDataByPeriodAndSubject = useCallback(async (period, subject) => {
     try {
       const { startTimestamp, endTimestamp } = getDateRange(period);
       
@@ -172,16 +175,17 @@ const ShowStatistics = () => {
       // 빈 배열 반환하여 UI가 깨지지 않도록 함
       return [];
     }
-  };
+  }, [getDateRange]);
 
+  // 초기 데이터 로딩 로직 최적화
   // 통계 페이지 로드 시 필요한 데이터 가져오기
   useEffect(() => {
     const fetchInitialData = async () => {
-      setLoading(true);
+      setIsInitialLoading(true);
       setError(null);
       
       try {
-        console.log('🚀 초기 데이터 로딩 시작:', { selectedPeriod, selectedSubject });
+        console.log('🚀 초기 데이터 로딩 시작');
         
         // 1. 먼저 전체 과목 목록을 위해 기본 데이터 가져오기 (일간, 전체)
         const allStatsData = await fetchStatisticsByPeriodAndSubject('daily', '전체');
@@ -197,53 +201,59 @@ const ShowStatistics = () => {
             setSelectedSubject(initialSubject);
           }
         }
-        
-        setLoading(false);
       } catch (err) {
         console.error('초기 데이터 로드 중 오류:', err);
         setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
-        setLoading(false);
+      } finally {
+        setIsInitialLoading(false);
       }
     };
     
     fetchInitialData();
-  }, [initialSubject]); // selectedPeriod, selectedSubject 의존성 제거 - 별도 useEffect에서 처리
+  }, [initialSubject, fetchStatisticsByPeriodAndSubject]); // fetchStatisticsByPeriodAndSubject 의존성 추가
 
+  // 성능 최적화된 데이터 페칭 로직
   // 탭 또는 과목 변경 시 데이터 다시 가져오기
   useEffect(() => {
     const fetchDataByPeriodAndSubject = async () => {
       // 초기 로딩 중이거나 과목 목록이 없으면 스킵
-      if (loading || allSubjects.length <= 1) return;
+      if (isInitialLoading || allSubjects.length <= 1) return;
       
-      setLoading(true);
+      // 중복 요청 방지
+      const currentParams = `${selectedPeriod}-${selectedSubject}`;
+      if (lastFetchParams === currentParams && !isDataLoading) return;
+      
+      setIsDataLoading(true);
       setError(null);
+      setLastFetchParams(currentParams);
       
       try {
         console.log('🔄 데이터 재로딩:', { selectedPeriod, selectedSubject });
         
-        // 1. 통계 데이터 가져오기
-        const statsData = await fetchStatisticsByPeriodAndSubject(selectedPeriod, selectedSubject);
+        // Promise.all을 사용하여 병렬 처리로 성능 향상
+        const [statsData, timeScoreData] = await Promise.all([
+          fetchStatisticsByPeriodAndSubject(selectedPeriod, selectedSubject),
+          fetchTimeScoreDataByPeriodAndSubject(selectedPeriod, selectedSubject)
+        ]);
+        
         setStatistics(statsData);
-        
-        // 2. 시간-점수 데이터 가져오기
-        const timeScoreData = await fetchTimeScoreDataByPeriodAndSubject(selectedPeriod, selectedSubject);
         processTimeScoreData(timeScoreData);
-        
-        setLoading(false);
       } catch (err) {
         console.error('기간/과목별 데이터 로드 중 오류:', err);
         setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
-        setLoading(false);
+      } finally {
+        setIsDataLoading(false);
       }
     };
     
     fetchDataByPeriodAndSubject();
-  }, [selectedPeriod, selectedSubject]); // 탭이나 과목이 변경될 때마다 실행
+  }, [selectedPeriod, selectedSubject, isInitialLoading, allSubjects.length, lastFetchParams, isDataLoading, fetchStatisticsByPeriodAndSubject, fetchTimeScoreDataByPeriodAndSubject]); // 필요한 의존성 모두 추가
+  
 
-  // 새로운 API에서 받은 데이터로 등급 계산 및 필터링 로직 수정
+  //새로운 API에서 받은 데이터로 등급 계산 및 필터링 로직 수정
   useEffect(() => {
     if (statistics.length > 0) {
-      // 이미 필터링된 데이터를 반환하므로 추가 필터링 불필요
+      // 새로운 API는 이미 필터링된 데이터를 반환하므로 추가 필터링 불필요
       setFilteredStatistics(statistics);
       
       // 받은 데이터로 등급 계산
@@ -421,13 +431,17 @@ const ShowStatistics = () => {
     }, 0);
   };
 
-  // 과목 선택 핸들러
-  const handleSubjectChange = (e) => {
-    setSelectedSubject(e.target.value);
-  };
+  // 디바운싱을 적용한 과목 선택 핸들러
+  const handleSubjectChange = useCallback((e) => {
+    const newSubject = e.target.value;
+    console.log(`과목 변경: ${selectedSubject} → ${newSubject}`);
+    setSelectedSubject(newSubject);
+  }, [selectedSubject]);
 
-  // 기간 탭 선택 핸들러
-  const handlePeriodChange = (period) => {
+  //  디바운싱을 적용한 기간 탭 선택 핸들러
+  const handlePeriodChange = useCallback((period) => {
+    if (period === selectedPeriod) return; // 동일한 탭 클릭 시 중복 처리 방지
+    
     console.log(`탭 변경: ${selectedPeriod} → ${period}`);
     setSelectedPeriod(period);
     
@@ -440,16 +454,20 @@ const ShowStatistics = () => {
       시작타임스탬프: startTimestamp,
       종료타임스탬프: endTimestamp
     });
-  };
+  }, [selectedPeriod, getDateRange]);
 
-  if (loading) {
+  // 통합된 로딩 상태 처리
+  const isLoading = isInitialLoading || isDataLoading;
+  
+  if (isLoading) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
-        <p>데이터를 불러오는 중...</p>
+        <p>{isInitialLoading ? '시스템 초기화 중...' : '데이터를 불러오는 중...'}</p>
       </div>
     );
   }
+  // [CLAUDE-MOD-END]
 
   if (error) {
     return (
@@ -573,7 +591,7 @@ const ShowStatistics = () => {
     <div className="statistics-container">
       <h1 className="page-title">학습 통계</h1>
       
-      {/* 기간별 탭 UI */}
+      {/* [CLAUDE-ADD]: 기간별 탭 UI */}
       <div className="period-tabs">
         <div className="tab-container">
           <button
