@@ -66,13 +66,6 @@ const ShowStatistics = () => {
     const startTimestamp = startTime.getTime();
     const endTimestamp = endTime.getTime();
 
-    console.log(`[${period}] 기간 계산:`, {
-      startTime: startTime.toLocaleString(),
-      endTime: endTime.toLocaleString(),
-      startTimestamp,
-      endTimestamp
-    });
-
     return { startTimestamp, endTimestamp };
   }, []); // 의존성 없음 - 순수 함수
 
@@ -89,13 +82,6 @@ const ShowStatistics = () => {
     try {
       const { startTimestamp, endTimestamp } = getDateRange(period);
       
-      console.log(`📊 기존 API로 통계 데이터 호출:`, {
-        period,
-        subject,
-        startTime: startTimestamp,
-        endTime: endTimestamp
-      });
-
       // 기존 API 사용
       const response = await fetch(`${API_BASE_URL}/get-all-statistics`, {
         method: 'GET',
@@ -110,7 +96,6 @@ const ShowStatistics = () => {
       }
 
       const data = await response.json();
-      console.log('📊 기존 API 통계 데이터:', data);
       
       // 클라이언트 측에서 필터링
       const filteredData = data.filter(item => {
@@ -120,10 +105,8 @@ const ShowStatistics = () => {
         return subjectMatch && timeMatch;
       });
       
-      console.log('📊 클라이언트 필터링된 데이터:', filteredData);
       return filteredData;
     } catch (err) {
-      console.error('통계 데이터 불러오기 오류:', err);
       throw new Error('통계 데이터를 불러오는데 문제가 발생했습니다.');
     }
   }, [getDateRange]);
@@ -132,13 +115,6 @@ const ShowStatistics = () => {
     try {
       const { startTimestamp, endTimestamp } = getDateRange(period);
       
-      console.log(`📈 기존 API로 시간-점수 데이터 호출:`, {
-        period,
-        subject,
-        startTime: startTimestamp,
-        endTime: endTimestamp
-      });
-
       // 기존 API 사용
       const response = await fetch(`${API_BASE_URL}/get-all-time-score-array-data`, {
         method: 'GET',
@@ -153,10 +129,8 @@ const ShowStatistics = () => {
       }
 
       const data = await response.json();
-      console.log('📈 기존 API 시간-점수 데이터:', data);
       
       if (!Array.isArray(data)) {
-        console.error('시간-점수 데이터가 배열이 아닙니다:', data);
         return [];
       }
       
@@ -168,10 +142,8 @@ const ShowStatistics = () => {
         return subjectMatch && timeMatch;
       });
       
-      console.log('📈 클라이언트 필터링된 시간-점수 데이터:', filteredData);
       return filteredData;
     } catch (err) {
-      console.error('시간-점수 데이터 불러오기 오류:', err);
       // 빈 배열 반환하여 UI가 깨지지 않도록 함
       return [];
     }
@@ -185,8 +157,6 @@ const ShowStatistics = () => {
       setError(null);
       
       try {
-        console.log('🚀 초기 데이터 로딩 시작');
-        
         // 1. 먼저 전체 과목 목록을 위해 기본 데이터 가져오기 (일간, 전체)
         const allStatsData = await fetchStatisticsByPeriodAndSubject('daily', '전체');
         
@@ -194,7 +164,6 @@ const ShowStatistics = () => {
         if (allStatsData && allStatsData.length > 0) {
           const subjects = ['전체', ...new Set(allStatsData.map(item => item.subjectName).filter(Boolean))];
           setAllSubjects(subjects);
-          console.log('📋 추출된 과목 목록:', subjects);
           
           // 초기 과목이 있고 목록에 있으면 선택
           if (initialSubject && subjects.includes(initialSubject)) {
@@ -202,7 +171,6 @@ const ShowStatistics = () => {
           }
         }
       } catch (err) {
-        console.error('초기 데이터 로드 중 오류:', err);
         setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
       } finally {
         setIsInitialLoading(false);
@@ -228,8 +196,6 @@ const ShowStatistics = () => {
       setLastFetchParams(currentParams);
       
       try {
-        console.log('🔄 데이터 재로딩:', { selectedPeriod, selectedSubject });
-        
         // Promise.all을 사용하여 병렬 처리로 성능 향상
         const [statsData, timeScoreData] = await Promise.all([
           fetchStatisticsByPeriodAndSubject(selectedPeriod, selectedSubject),
@@ -239,7 +205,6 @@ const ShowStatistics = () => {
         setStatistics(statsData);
         processTimeScoreData(timeScoreData);
       } catch (err) {
-        console.error('기간/과목별 데이터 로드 중 오류:', err);
         setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
       } finally {
         setIsDataLoading(false);
@@ -265,7 +230,6 @@ const ShowStatistics = () => {
       setGradeScore(0);
     }
   }, [statistics]);
-  // [CLAUDE-MOD-END]
   
   // 시간-점수 데이터 처리
   const processTimeScoreData = (data) => {
@@ -273,8 +237,6 @@ const ShowStatistics = () => {
       setTimeScores([]);
       return;
     }
-    
-    console.log('첫 번째 시간-점수 데이터 항목:', data[0]);
     
     // null 체크 및 타입 변환 함수
     const safeNumber = (value) => {
@@ -302,10 +264,8 @@ const ShowStatistics = () => {
       // 시간 순서대로 정렬
       const sortedData = formattedData.sort((a, b) => a.timestamp - b.timestamp);
       
-      console.log('가공된 시간-점수 데이터:', sortedData);
       setTimeScores(sortedData);
     } catch (err) {
-      console.error('시간-점수 데이터 처리 중 오류:', err);
       setTimeScores([]);
     }
   };
@@ -434,26 +394,17 @@ const ShowStatistics = () => {
   // 디바운싱을 적용한 과목 선택 핸들러
   const handleSubjectChange = useCallback((e) => {
     const newSubject = e.target.value;
-    console.log(`과목 변경: ${selectedSubject} → ${newSubject}`);
     setSelectedSubject(newSubject);
-  }, [selectedSubject]);
+  }, []);
 
   //  디바운싱을 적용한 기간 탭 선택 핸들러
   const handlePeriodChange = useCallback((period) => {
     if (period === selectedPeriod) return; // 동일한 탭 클릭 시 중복 처리 방지
     
-    console.log(`탭 변경: ${selectedPeriod} → ${period}`);
     setSelectedPeriod(period);
     
     // 선택된 기간의 날짜 범위 계산 및 콘솔 출력
     const { startTimestamp, endTimestamp } = getDateRange(period);
-    console.log(`${period} 탭 선택됨 - 계산된 시간 범위:`, {
-      기간: period,
-      시작시간: new Date(startTimestamp).toLocaleString(),
-      종료시간: new Date(endTimestamp).toLocaleString(),
-      시작타임스탬프: startTimestamp,
-      종료타임스탬프: endTimestamp
-    });
   }, [selectedPeriod, getDateRange]);
 
   // 통합된 로딩 상태 처리
@@ -467,7 +418,6 @@ const ShowStatistics = () => {
       </div>
     );
   }
-  // [CLAUDE-MOD-END]
 
   if (error) {
     return (
@@ -591,7 +541,7 @@ const ShowStatistics = () => {
     <div className="statistics-container">
       <h1 className="page-title">학습 통계</h1>
       
-      {/* [CLAUDE-ADD]: 기간별 탭 UI */}
+      {/* 기간별 탭 UI */}
       <div className="period-tabs">
         <div className="tab-container">
           <button
