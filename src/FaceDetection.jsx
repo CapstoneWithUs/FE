@@ -224,7 +224,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
           console.log('점수 데이터: ', scoreData);
 
-          const promise = fetch('http://54.180.142.137/set-time-score-array-data', {
+          const promise = fetch('https://pocusmate.ddns.net/set-time-score-array-data', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -248,7 +248,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
         }
       }
 
-      fetch('http://54.180.142.137/set-statistics', {
+      fetch('https://pocusmate.ddns.net/set-statistics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -326,7 +326,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
         console.log('점수 데이터: ', scoreData);
 
-        const promise = fetch('http://54.180.142.137/set-time-score-array-data', {
+        const promise = fetch('https://pocusmate.ddns.net/set-time-score-array-data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -350,7 +350,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
       }
     }
 
-    fetch('http://54.180.142.137/set-statistics', {
+    fetch('https://pocusmate.ddns.net/set-statistics', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
