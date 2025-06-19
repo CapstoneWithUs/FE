@@ -19,6 +19,71 @@
   text-shadow: 0 2px 4px rgba(91, 155, 213, 0.1);
 }
 
+.period-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.tab-container {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.tab-button {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%);
+  border: 2px solid var(--primary-blue-light);
+  border-radius: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-blue-dark);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+  box-shadow: var(--shadow-medium);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  transition: left 0.4s ease;
+  z-index: -1;
+}
+
+.tab-button:hover::before {
+  left: 0;
+}
+
+.tab-button:hover {
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-strong);
+  border-color: var(--primary-blue);
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  font-weight: 700;
+  border: 2px solid var(--primary-blue-dark);
+  box-shadow: 0 4px 16px rgba(68, 114, 196, 0.3);
+  transform: translateY(-1px);
+}
+
+.tab-button.active::before {
+  display: none;
+}
+
 .subject-selector {
   display: flex;
   justify-content: center;
@@ -355,8 +420,22 @@
     min-height: 400px;
   }
   
-  .toggleGroup {
-    grid-template-columns: 1fr;
+  /* 모바일에서 기존 디자인 유지하며 탭 반응형 처리 */
+  .period-tabs {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .tab-container {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .tab-button {
+    width: 100%;
+    margin: 0;
   }
 }
 
@@ -380,10 +459,6 @@
     height: 100px;
     font-size: 2.5rem;
   }
-  
-  .toggleGroup {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 /* 태블릿 가로 모드 (1024px 이상) */
@@ -399,10 +474,6 @@
   
   .chart {
     min-height: 370px;
-  }
-  
-  .toggleGroup {
-    grid-template-columns: repeat(4, 1fr);
   }
 }
 
