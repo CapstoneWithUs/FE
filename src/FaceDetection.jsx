@@ -557,7 +557,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
         requestAnimationFrame(detectFaces);
         return;
       }
-
+      
       try {
         const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
 
@@ -585,7 +585,6 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
       } catch (error) {
         console.error('얼굴 감지 오류:', error);
       }
-      
       setTimeout(() => requestAnimationFrame(detectFaces), 75);
     };
     
