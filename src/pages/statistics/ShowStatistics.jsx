@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './ShowStatistics.css'; // CSS 파일 임포트
 
 // const API_BASE_URL = 'http://localhost:8080';
-const API_BASE_URL = 'https://be-production-1350.up.railway.app';
+const API_BASE_URL = 'http://54.180.142.137';
 
 const ShowStatistics = () => {
   const location = useLocation();
@@ -21,6 +21,54 @@ const ShowStatistics = () => {
   const [gradeScore, setGradeScore] = useState(0);
   const [filteredStatistics, setFilteredStatistics] = useState([]);
 
+  // 로딩 상태 세분화 및 요청 중복 방지를 위한 상태
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [lastFetchParams, setLastFetchParams] = useState(null);
+
+  // 기간별 탭 상태 관리
+  const [selectedPeriod, setSelectedPeriod] = useState('daily'); // daily, weekly, monthly
+
+  // 성능 최적화를 위한 memoized 유틸리티 함수
+  const getDateRange = useCallback((period) => {
+    const now = new Date();
+    let startTime, endTime;
+
+    switch (period) {
+      case 'daily':
+        // 오늘 00:00:00 ~ 23:59:59
+        startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      
+      case 'weekly':
+        // 이번 주 월요일 00:00:00 ~ 일요일 23:59:59
+        const dayOfWeek = now.getDay(); // 0(일요일) ~ 6(토요일)
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 월요일까지의 일수
+        
+        startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysToMonday, 0, 0, 0, 0);
+        endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - daysToMonday), 23, 59, 59, 999);
+        break;
+      
+      case 'monthly':
+        // 이번 달 1일 00:00:00 ~ 말일 23:59:59
+        startTime = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        endTime = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // 다음 달 0일 = 이번 달 마지막 날
+        break;
+      
+      default:
+        // 기본값은 일간
+        startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    }
+
+    // Unix timestamp (밀리초)로 변환
+    const startTimestamp = startTime.getTime();
+    const endTimestamp = endTime.getTime();
+
+    return { startTimestamp, endTimestamp };
+  }, []); // 의존성 없음 - 순수 함수
+
   // 과목명을 localStorage에 저장 (페이지 새로고침 시 유지하기 위해)
   useEffect(() => {
     if (location.state?.subject) {
@@ -29,59 +77,12 @@ const ShowStatistics = () => {
     }
   }, [location.state]);
 
-  // 통계 페이지 로드 시 필요한 데이터 가져오기
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // 모든 통계 데이터 가져오기
-        const statsData = await fetchStatistics();
-        
-        // 통계 데이터에서 과목 목록 추출
-        if (statsData && statsData.length > 0) {
-          const subjects = ['전체', ...new Set(statsData.map(item => item.subjectName).filter(Boolean))];
-          setAllSubjects(subjects);
-          
-          // 초기 과목이 있고 목록에 있으면 선택
-          if (initialSubject && subjects.includes(initialSubject)) {
-            setSelectedSubject(initialSubject);
-          }
-        }
-        
-        // 시간-점수 데이터 가져오기
-        await fetchTimeScoreData();
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('데이터 로드 중 오류:', err);
-        setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, [initialSubject]);
-
-  // 선택된 과목이 변경될 때 데이터 필터링
-  useEffect(() => {
-    if (statistics.length > 0) {
-      if (selectedSubject === '전체') {
-        setFilteredStatistics(statistics);
-      } else {
-        const filtered = statistics.filter(item => item.subjectName === selectedSubject);
-        setFilteredStatistics(filtered);
-      }
-      
-      // 선택된 과목 기준으로 등급 계산
-      calculateOverallGrade(selectedSubject === '전체' ? statistics : statistics.filter(item => item.subjectName === selectedSubject));
-    }
-  }, [selectedSubject, statistics]);
-
-  // 통계 데이터 가져오기
-  const fetchStatistics = async () => {
+  // memoized API 함수들로 성능 최적화
+  const fetchStatisticsByPeriodAndSubject = useCallback(async (period, subject) => {
     try {
+      const { startTimestamp, endTimestamp } = getDateRange(period);
+      
+      // 기존 API 사용
       const response = await fetch(`${API_BASE_URL}/get-all-statistics`, {
         method: 'GET',
         headers: {
@@ -95,20 +96,26 @@ const ShowStatistics = () => {
       }
 
       const data = await response.json();
-      console.log('원본 통계 데이터:', data);
       
-      setStatistics(data);
+      // 클라이언트 측에서 필터링
+      const filteredData = data.filter(item => {
+        const itemTime = item.startTime;
+        const subjectMatch = subject === '전체' || item.subjectName === subject;
+        const timeMatch = itemTime >= startTimestamp && itemTime <= endTimestamp;
+        return subjectMatch && timeMatch;
+      });
       
-      return data;
+      return filteredData;
     } catch (err) {
-      console.error('통계 데이터 불러오기 오류:', err);
       throw new Error('통계 데이터를 불러오는데 문제가 발생했습니다.');
     }
-  };
+  }, [getDateRange]);
 
-  // 시간-점수 데이터 가져오기
-  const fetchTimeScoreData = async () => {
+  const fetchTimeScoreDataByPeriodAndSubject = useCallback(async (period, subject) => {
     try {
+      const { startTimestamp, endTimestamp } = getDateRange(period);
+      
+      // 기존 API 사용
       const response = await fetch(`${API_BASE_URL}/get-all-time-score-array-data`, {
         method: 'GET',
         headers: {
@@ -122,27 +129,107 @@ const ShowStatistics = () => {
       }
 
       const data = await response.json();
-      console.log('원본 시간-점수 데이터:', data);
       
       if (!Array.isArray(data)) {
-        console.error('시간-점수 데이터가 배열이 아닙니다:', data);
-        throw new Error('API 응답 형식이 잘못되었습니다.');
-      }
-      
-      if (data.length === 0) {
-        console.warn('시간-점수 데이터가 없습니다');
-        setTimeScores([]);
         return [];
       }
       
-      // 데이터 형식 확인 및 변환
-      processTimeScoreData(data);
-      return data;
+      // 클라이언트 측에서 필터링
+      const filteredData = data.filter(item => {
+        const itemTime = item.eachTime;
+        const subjectMatch = subject === '전체' || item.subjectName === subject;
+        const timeMatch = itemTime >= startTimestamp && itemTime <= endTimestamp;
+        return subjectMatch && timeMatch;
+      });
+      
+      return filteredData;
     } catch (err) {
-      console.error('시간-점수 데이터 불러오기 오류:', err);
-      throw new Error('시간-점수 데이터를 불러오는데 문제가 발생했습니다.');
+      // 빈 배열 반환하여 UI가 깨지지 않도록 함
+      return [];
     }
-  };
+  }, [getDateRange]);
+
+  // 초기 데이터 로딩 로직 최적화
+  // 통계 페이지 로드 시 필요한 데이터 가져오기
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setIsInitialLoading(true);
+      setError(null);
+      
+      try {
+        // 1. 먼저 전체 과목 목록을 위해 기본 데이터 가져오기 (일간, 전체)
+        const allStatsData = await fetchStatisticsByPeriodAndSubject('daily', '전체');
+        
+        // 2. 통계 데이터에서 과목 목록 추출
+        if (allStatsData && allStatsData.length > 0) {
+          const subjects = ['전체', ...new Set(allStatsData.map(item => item.subjectName).filter(Boolean))];
+          setAllSubjects(subjects);
+          
+          // 초기 과목이 있고 목록에 있으면 선택
+          if (initialSubject && subjects.includes(initialSubject)) {
+            setSelectedSubject(initialSubject);
+          }
+        }
+      } catch (err) {
+        setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    
+    fetchInitialData();
+  }, [initialSubject, fetchStatisticsByPeriodAndSubject]); // fetchStatisticsByPeriodAndSubject 의존성 추가
+
+  // 성능 최적화된 데이터 페칭 로직
+  // 탭 또는 과목 변경 시 데이터 다시 가져오기
+  useEffect(() => {
+    const fetchDataByPeriodAndSubject = async () => {
+      // 초기 로딩 중이거나 과목 목록이 없으면 스킵
+      if (isInitialLoading || allSubjects.length <= 1) return;
+      
+      // 중복 요청 방지
+      const currentParams = `${selectedPeriod}-${selectedSubject}`;
+      if (lastFetchParams === currentParams && !isDataLoading) return;
+      
+      setIsDataLoading(true);
+      setError(null);
+      setLastFetchParams(currentParams);
+      
+      try {
+        // Promise.all을 사용하여 병렬 처리로 성능 향상
+        const [statsData, timeScoreData] = await Promise.all([
+          fetchStatisticsByPeriodAndSubject(selectedPeriod, selectedSubject),
+          fetchTimeScoreDataByPeriodAndSubject(selectedPeriod, selectedSubject)
+        ]);
+        
+        setStatistics(statsData);
+        processTimeScoreData(timeScoreData);
+      } catch (err) {
+        setError(err.message || '데이터를 불러오는데 문제가 발생했습니다.');
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+    
+    fetchDataByPeriodAndSubject();
+  }, [selectedPeriod, selectedSubject, isInitialLoading, allSubjects.length, lastFetchParams, isDataLoading, fetchStatisticsByPeriodAndSubject, fetchTimeScoreDataByPeriodAndSubject]); // 필요한 의존성 모두 추가
+  
+
+  //새로운 API에서 받은 데이터로 등급 계산 및 필터링 로직 수정
+  useEffect(() => {
+    if (statistics.length > 0) {
+      // 새로운 API는 이미 필터링된 데이터를 반환하므로 추가 필터링 불필요
+      setFilteredStatistics(statistics);
+      
+      // 받은 데이터로 등급 계산
+      calculateOverallGrade(statistics);
+    } else {
+      // 데이터가 없는 경우 초기화
+      setFilteredStatistics([]);
+      setOverallGrade('N/A');
+      setGradeScore(0);
+    }
+  }, [statistics]);
   
   // 시간-점수 데이터 처리
   const processTimeScoreData = (data) => {
@@ -150,8 +237,6 @@ const ShowStatistics = () => {
       setTimeScores([]);
       return;
     }
-    
-    console.log('첫 번째 시간-점수 데이터 항목:', data[0]);
     
     // null 체크 및 타입 변환 함수
     const safeNumber = (value) => {
@@ -179,10 +264,8 @@ const ShowStatistics = () => {
       // 시간 순서대로 정렬
       const sortedData = formattedData.sort((a, b) => a.timestamp - b.timestamp);
       
-      console.log('가공된 시간-점수 데이터:', sortedData);
       setTimeScores(sortedData);
     } catch (err) {
-      console.error('시간-점수 데이터 처리 중 오류:', err);
       setTimeScores([]);
     }
   };
@@ -308,16 +391,30 @@ const ShowStatistics = () => {
     }, 0);
   };
 
-  // 과목 선택 핸들러
-  const handleSubjectChange = (e) => {
-    setSelectedSubject(e.target.value);
-  };
+  // 디바운싱을 적용한 과목 선택 핸들러
+  const handleSubjectChange = useCallback((e) => {
+    const newSubject = e.target.value;
+    setSelectedSubject(newSubject);
+  }, []);
 
-  if (loading) {
+  //  디바운싱을 적용한 기간 탭 선택 핸들러
+  const handlePeriodChange = useCallback((period) => {
+    if (period === selectedPeriod) return; // 동일한 탭 클릭 시 중복 처리 방지
+    
+    setSelectedPeriod(period);
+    
+    // 선택된 기간의 날짜 범위 계산 및 콘솔 출력
+    const { startTimestamp, endTimestamp } = getDateRange(period);
+  }, [selectedPeriod, getDateRange]);
+
+  // 통합된 로딩 상태 처리
+  const isLoading = isInitialLoading || isDataLoading;
+  
+  if (isLoading) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
-        <p>데이터를 불러오는 중...</p>
+        <p>{isInitialLoading ? '시스템 초기화 중...' : '데이터를 불러오는 중...'}</p>
       </div>
     );
   }
@@ -337,6 +434,46 @@ const ShowStatistics = () => {
     return (
       <div className="statistics-container">
         <h1 className="page-title">학습 통계</h1>
+        
+        {/* 기간별 탭 UI */}
+        <div className="period-tabs">
+          <div className="tab-container">
+            <button
+              className={`tab-button ${selectedPeriod === 'daily' ? 'active' : ''}`}
+              onClick={() => handlePeriodChange('daily')}
+            >
+              일간
+            </button>
+            <button
+              className={`tab-button ${selectedPeriod === 'weekly' ? 'active' : ''}`}
+              onClick={() => handlePeriodChange('weekly')}
+            >
+              주간
+            </button>
+            <button
+              className={`tab-button ${selectedPeriod === 'monthly' ? 'active' : ''}`}
+              onClick={() => handlePeriodChange('monthly')}
+            >
+              월간
+            </button>
+          </div>
+        </div>
+        
+        {/* 과목 선택 드롭다운 */}
+        <div className="subject-selector">
+          <label htmlFor="subject-select">과목 선택:</label>
+          <select 
+            id="subject-select" 
+            value={selectedSubject} 
+            onChange={handleSubjectChange}
+            className="subject-select-dropdown"
+          >
+            {allSubjects.map(subject => (
+              <option key={subject} value={subject}>{subject}</option>
+            ))}
+          </select>
+        </div>
+        
         <div className="no-data-message full-page">
           <p>통계 데이터가 없습니다.</p>
           <p>먼저 학습을 진행한 후 통계를 확인해주세요.</p>
@@ -350,6 +487,30 @@ const ShowStatistics = () => {
     return (
       <div className="statistics-container">
         <h1 className="page-title">학습 통계</h1>
+        
+        {/* 기간별 탭 UI */}
+        <div className="period-tabs">
+          <div className="tab-container">
+            <button
+              className={`tab-button ${selectedPeriod === 'daily' ? 'active' : ''}`}
+              onClick={() => handlePeriodChange('daily')}
+            >
+              일간
+            </button>
+            <button
+              className={`tab-button ${selectedPeriod === 'weekly' ? 'active' : ''}`}
+              onClick={() => handlePeriodChange('weekly')}
+            >
+              주간
+            </button>
+            <button
+              className={`tab-button ${selectedPeriod === 'monthly' ? 'active' : ''}`}
+              onClick={() => handlePeriodChange('monthly')}
+            >
+              월간
+            </button>
+          </div>
+        </div>
         
         {/* 과목 선택 드롭다운 */}
         <div className="subject-selector">
@@ -379,6 +540,30 @@ const ShowStatistics = () => {
   return (
     <div className="statistics-container">
       <h1 className="page-title">학습 통계</h1>
+      
+      {/* 기간별 탭 UI */}
+      <div className="period-tabs">
+        <div className="tab-container">
+          <button
+            className={`tab-button ${selectedPeriod === 'daily' ? 'active' : ''}`}
+            onClick={() => handlePeriodChange('daily')}
+          >
+            일간
+          </button>
+          <button
+            className={`tab-button ${selectedPeriod === 'weekly' ? 'active' : ''}`}
+            onClick={() => handlePeriodChange('weekly')}
+          >
+            주간
+          </button>
+          <button
+            className={`tab-button ${selectedPeriod === 'monthly' ? 'active' : ''}`}
+            onClick={() => handlePeriodChange('monthly')}
+          >
+            월간
+          </button>
+        </div>
+      </div>
       
       {/* 과목 선택 드롭다운 */}
       <div className="subject-selector">
