@@ -1,3 +1,4 @@
+// FaceDetection.jsx - MediaPipe 오류 수정 버전
 import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
 import { useNavigate } from 'react-router-dom';
@@ -32,44 +33,61 @@ import { useScoreLogger } from "./useScoreLogger";
 
 import { useCanvas } from "./components/CanvasOverlay";
 
+// OpenCV 로딩 함수 개선
 const LoadCV = async () => {
-  if (typeof cv === "undefined") {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://docs.opencv.org/4.x/opencv.js";
-      script.async = true;
-      script.onload = async () => {
-        window.cv = await window.cv;
-        resolve();
-      }
-      document.body.appendChild(script);
-    });
+  if (typeof window.cv !== "undefined" && window.cv.Mat) {
+    return Promise.resolve();
   }
+  
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://docs.opencv.org/4.x/opencv.js";
+    script.async = true;
+    script.onload = () => {
+      // OpenCV가 완전히 로드될 때까지 대기
+      const checkCV = () => {
+        if (typeof window.cv !== "undefined" && window.cv.Mat) {
+          resolve();
+        } else {
+          setTimeout(checkCV, 100);
+        }
+      };
+      checkCV();
+    };
+    script.onerror = () => {
+      reject(new Error("OpenCV 로딩 실패"));
+    };
+    document.body.appendChild(script);
+  });
 };
 
 // 전역 변수 초기화
-window.prvTime = performance.now();
-window.startTime = Date.now();
-window.accTime = [0, 0, 0, 0, 0, 0, 0];
-window.STATE = 0;
-window.isEyeClosed = false;
-window.eyeClosedTime = 0;
-window.isSleeping = false;
-window.isSessionActive = false;
+if (typeof window !== 'undefined') {
+  window.prvTime = performance.now();
+  window.startTime = Date.now();
+  window.accTime = [0, 0, 0, 0, 0, 0, 0];
+  window.STATE = 0;
+  window.isEyeClosed = false;
+  window.eyeClosedTime = 0;
+  window.isSleeping = false;
+  window.isSessionActive = false;
+}
 
 const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionStatusChange, onNormalExit }, ref) => {
   const navigate = useNavigate();
 
   // 컴포넌트 마운트 시 전역 변수 초기화
   useEffect(() => {
-    window.prvTime = performance.now();
-    window.startTime = Date.now();
-    window.accTime = [0, 0, 0, 0, 0, 0, 0];
-    window.STATE = 0;
-    window.isEyeClosed = false;
-    window.eyeClosedTime = 0;
-    window.isSleeping = false;
-    window.isSessionActive = false;
+    if (typeof window !== 'undefined') {
+      window.prvTime = performance.now();
+      window.startTime = Date.now();
+      window.accTime = [0, 0, 0, 0, 0, 0, 0];
+      window.STATE = 0;
+      window.isEyeClosed = false;
+      window.eyeClosedTime = 0;
+      window.isSleeping = false;
+      window.isSessionActive = false;
+    }
     console.log('FaceDetection 컴포넌트 초기화됨');
   }, []);
 
@@ -97,7 +115,9 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
       if (displayMode == "pip") canvas.style.backgroundColor = "black";
       if (displayMode == "faceOff") canvas.style.backgroundColor = "black";
     }
-    if (videoRef.current && displayMode == "pip") videoRef.current.requestPictureInPicture();
+    if (videoRef.current && displayMode == "pip") {
+      videoRef.current.requestPictureInPicture().catch(console.warn);
+    }
   }, [displayMode]);
 
   const canvasRef = useRef(null);
@@ -105,6 +125,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
   const [faceLandmarker, setFaceLandmarker] = useState(null);
   const faceLandmarkerRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState(null);
   const [sessionActive, setSessionActive] = useState(false);
   const [stateInfo, setStateInfo] = useState({
     now: performance.now(),
@@ -162,14 +183,16 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
   }), [sessionActive, currentSubject]);
 
   const startSession = () => {
-    window.prvTime = performance.now();
-    window.startTime = Date.now();
-    window.accTime = [0, 0, 0, 0, 0, 0, 0];
-    window.STATE = 0;
-    window.isEyeClosed = false;
-    window.eyeClosedTime = 0;
-    window.isSleeping = false;
-    window.isSessionActive = true;
+    if (typeof window !== 'undefined') {
+      window.prvTime = performance.now();
+      window.startTime = Date.now();
+      window.accTime = [0, 0, 0, 0, 0, 0, 0];
+      window.STATE = 0;
+      window.isEyeClosed = false;
+      window.eyeClosedTime = 0;
+      window.isSleeping = false;
+      window.isSessionActive = true;
+    }
 
     setSessionActive(true);
     // 상위 컴포넌트에 세션 시작 알림
@@ -210,17 +233,18 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
       const timeScorePromises = [];
 
-      if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {      const timeScoreData = Array.from(
-        new Map(scoreLog.current[0].map(p => [p.time, p])).values()
-      );
-     
-      for (let i = 0; i < timeScoreData.length; i++) {
-        const { time, value } = timeScoreData[i];
-        const scoreData = {
-          eachTime: time,
-          eachScore: value,
-          subjectName: currentSubject,
-        };
+      if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
+        const timeScoreData = Array.from(
+          new Map(scoreLog.current[0].map(p => [p.time, p])).values()
+        );
+       
+        for (let i = 0; i < timeScoreData.length; i++) {
+          const { time, value } = timeScoreData[i];
+          const scoreData = {
+            eachTime: time,
+            eachScore: value,
+            subjectName: currentSubject,
+          };
 
           console.log('점수 데이터: ', scoreData);
 
@@ -312,17 +336,18 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
 
     const timeScorePromises = [];
 
-    if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {      const timeScoreData = Array.from(
-      new Map(scoreLog.current[0].map(p => [p.time, p])).values()
-    );
-   
-    for (let i = 0; i < timeScoreData.length; i++) {
-      const { time, value } = timeScoreData[i];
-      const scoreData = {
-        eachTime: time,
-        eachScore: value,
-        subjectName: currentSubject,
-      };
+    if (scoreLog.current && scoreLog.current[0] && scoreLog.current[0].length > 0) {
+      const timeScoreData = Array.from(
+        new Map(scoreLog.current[0].map(p => [p.time, p])).values()
+      );
+     
+      for (let i = 0; i < timeScoreData.length; i++) {
+        const { time, value } = timeScoreData[i];
+        const scoreData = {
+          eachTime: time,
+          eachScore: value,
+          subjectName: currentSubject,
+        };
 
         console.log('점수 데이터: ', scoreData);
 
@@ -413,52 +438,112 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
   useEffect(() => {
     const setupFaceLandmarker = async () => {
       try {
+        setLoading(true);
+        setLoadingError(null);
+        
+        console.log('MediaPipe 초기화 시작...');
+        
+        // 최신 버전의 CDN 경로 사용
         const vision = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
+        
+        console.log('FilesetResolver 성공');
 
-        setFaceLandmarker(await FaceLandmarker.createFromOptions(vision,
-          {
+        const landmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+            delegate: "GPU"
+          },
+          minFaceDetectionConfidence: 0.9,
+          minFacePresenceConfidence: 0.9,
+          outputFaceBlendshapes: false,
+          runningMode: "VIDEO",
+          numFaces: 1
+        });
+        
+        console.log('FaceLandmarker 초기화 성공');
+        setFaceLandmarker(landmarker);
+        
+      } catch (error) {
+        console.error("MediaPipe 초기화 오류:", error);
+        setLoadingError(`MediaPipe 초기화 실패: ${error.message}`);
+        
+        // 백업 CDN 시도
+        try {
+          console.log('백업 CDN으로 재시도...');
+          const vision = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.15/wasm"
+          );
+          
+          const landmarker = await FaceLandmarker.createFromOptions(vision, {
             baseOptions: {
               modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-              delegate: "GPU"
+              delegate: "CPU" // GPU에서 실패할 경우 CPU 사용
             },
             minFaceDetectionConfidence: 0.9,
             minFacePresenceConfidence: 0.9,
             outputFaceBlendshapes: false,
             runningMode: "VIDEO",
             numFaces: 1
-          }
-        ));
+          });
+          
+          console.log('백업 CDN으로 FaceLandmarker 초기화 성공');
+          setFaceLandmarker(landmarker);
+          setLoadingError(null);
+          
+        } catch (backupError) {
+          console.error("백업 CDN도 실패:", backupError);
+          setLoadingError(`MediaPipe 초기화 완전 실패: ${backupError.message}`);
+        }
+      } finally {
         setLoading(false);
-      } catch (error) {
-        console.error("Error setting up face landmarker:", error);
       }
     };
 
     const startCamera = async () => {
-      if (!window.cv) await LoadCV();
-      if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
-          .then((stream) => {
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream;
-            }
-          })
-          .catch((error) => console.error("Error accessing webcam:", error));
+      try {
+        if (!window.cv) {
+          console.log('OpenCV 로딩 시작...');
+          await LoadCV();
+          console.log('OpenCV 로딩 완료');
+        }
+        
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              width: 640, 
+              height: 480,
+              facingMode: 'user'
+            } 
+          });
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+          console.log('카메라 스트림 시작 성공');
+        } else {
+          throw new Error('getUserMedia가 지원되지 않습니다.');
+        }
+      } catch (error) {
+        console.error("카메라 접근 오류:", error);
+        setLoadingError(`카메라 접근 실패: ${error.message}`);
       }
     };
+
     setupFaceLandmarker();
     startCamera();
   }, []);
 
   useEffect(() => {
     faceLandmarkerRef.current = faceLandmarker;
+    
     const detectFaces = async () => {
       if (!videoRef.current || !canvasRef.current) {
         requestAnimationFrame(detectFaces);
         return;
       }
+      
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const canvasOverlay = canvasOverlayRef.current;
@@ -472,45 +557,73 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
         requestAnimationFrame(detectFaces);
         return;
       }
+      
+      try {
+        const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
 
-      const faces = faceLandmarkerRef.current.detectForVideo(video, performance.now());
+        const now = performance.now();
+        const score = calculateFocusScore(
+          window.STATE,
+          getTimeDecaySum(leftBlinkHistoryRef.current, now),
+          getTimeDecaySum(rightBlinkHistoryRef.current, now),
+          getTimeDecayAvg(leftEarHistoryRef.current, now),
+          getTimeDecayAvg(rightEarHistoryRef.current, now),
+          getTimeDecayAvg(headAngleVariationHistoryRef.current, now),
+          getTimeDecayAvg(headMovementHistoryRef.current, now)
+        ) * 100;
 
-      const now = performance.now();
-      const score = calculateFocusScore(
-        window.STATE,
-        getTimeDecaySum(leftBlinkHistoryRef.current, now),
-        getTimeDecaySum(rightBlinkHistoryRef.current, now),
-        getTimeDecayAvg(leftEarHistoryRef.current, now),
-        getTimeDecayAvg(rightEarHistoryRef.current, now),
-        getTimeDecayAvg(headAngleVariationHistoryRef.current, now),
-        getTimeDecayAvg(headMovementHistoryRef.current, now)
-      ) * 100;
-
-      ProcessFrame(
-        displayModeRef.current,
-        window.cv, canvas, canvasOverlay, faces.faceLandmarks, focalRef.current, 640, 480,
-        blinkCounter,
-        earLogger,
-        headAngleVariation,
-        headMovement,
-        score,
-        scoreLogger,
-      );
+        ProcessFrame(
+          displayModeRef.current,
+          window.cv, canvas, canvasOverlay, faces.faceLandmarks, focalRef.current, 640, 480,
+          blinkCounter,
+          earLogger,
+          headAngleVariation,
+          headMovement,
+          score,
+          scoreLogger,
+        );
+      } catch (error) {
+        console.error('얼굴 감지 오류:', error);
+      }
       setTimeout(() => requestAnimationFrame(detectFaces), 75);
     };
-    requestAnimationFrame(detectFaces);
+    
+    if (faceLandmarker) {
+      requestAnimationFrame(detectFaces);
+    }
   }, [faceLandmarker, sessionActive]);
 
-  // [삭제] 빈 함수였던 handleModeChange 함수 제거
-  // const handleModeChange = (mode) => {
-  //   // displayMode 변경 로직은 FocusTrackerPage에서 처리
-  // };
+  // 로딩 오류가 있을 경우 오류 메시지 표시
+  if (loadingError) {
+    return (
+      <div style={styles.container}>
+        <style>{styles.globalCss}</style>
+        <ModeSelector displayMode={displayMode} onModeChange={undefined} />
+        <Header />
+        <div style={styles.loadingContainer}>
+          <div style={{ color: '#e74c3c', marginBottom: '1rem' }}>
+            <h2>시스템 오류 발생</h2>
+            <p>{loadingError}</p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              ...styles.sessionButton,
+              ...styles.startButton,
+              marginTop: '1rem'
+            }}
+          >
+            페이지 새로고침
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
       <style>{styles.globalCss}</style>
 
-      {/* [수정] onModeChange props에서 빈 함수 대신 undefined 전달 */}
       <ModeSelector displayMode={displayMode} onModeChange={undefined} />
       <Header />
 
