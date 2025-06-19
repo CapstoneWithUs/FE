@@ -316,21 +316,21 @@ const ShowStatistics = () => {
     }
 
     const score = (
-      (totalGradeATime * 95 + 
-       totalGradeBTime * 85 + 
-       totalGradeCTime * 75 + 
-       totalGradeDTime * 35) / totalStudyTime
+      (totalGradeATime * 90 + 
+       totalGradeBTime * 70 + 
+       totalGradeCTime * 50 + 
+       totalGradeDTime * 20) / totalStudyTime
     );
     
     const roundedScore = Math.round(score);
     setGradeScore(roundedScore);
     
     // Determine grade based on score
-    if (score >= 90) {
+    if (score >= 80) {
       setOverallGrade('A');
-    } else if (score >= 80) {
+    } else if (score >= 60) {
       setOverallGrade('B');
-    } else if (score >= 70) {
+    } else if (score >= 40) {
       setOverallGrade('C');
     } else {
       setOverallGrade('D');
