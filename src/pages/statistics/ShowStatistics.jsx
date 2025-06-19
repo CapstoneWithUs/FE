@@ -4,7 +4,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import './ShowStatistics.css'; // CSS 파일 임포트
 
 // const API_BASE_URL = 'http://localhost:8080';
-const API_BASE_URL = 'https://be-production-1350.up.railway.app';
+const API_BASE_URL = 'http://54.180.142.137';
 
 const ShowStatistics = () => {
   const location = useLocation();
