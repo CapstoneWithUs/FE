@@ -29,6 +29,7 @@ import { useEarLogger } from "./earLogger";
 import { useHeadAngleVariation } from "./headAngleVariation";
 import { useHeadMovement } from "./headMovement";
 import { useScoreLogger } from "./useScoreLogger";
+import { useWorstTimeRecorder } from "./useWorstTimeRecorder";
 
 import { useCanvas } from "./components/CanvasOverlay";
 
@@ -82,6 +83,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
   const { headAngleVariationHistory, headAngleVariationHistoryRef, headAngleVariation } = useHeadAngleVariation();
   const { headMovementHistory, headMovementHistoryRef, headMovement } = useHeadMovement();
   const { scoreLog, scoreLogger } = useScoreLogger(Date.now());
+  const { worstRecordRef, initMediaRecorder, startRecordingInterval, stopRecordingInterval } = useWorstTimeRecorder(scoreLog);
 
   const videoRef = useRef(null);
   const displayModeRef = useRef("webcam");
@@ -177,6 +179,23 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
       onSessionStatusChange(true);
     }
     console.log('측정 시작됨:', currentSubject);
+    startRecordingInterval();
+  };
+
+  const endSession = () => {
+    stopRecordingInterval();
+    /** TODO: 결과 페이지에서 동영상 볼 수 있도록 해야 함. 현재 임시로 영상을 다운받게 함. **/
+    if (worstRecordRef.current[1]) {
+      const url = URL.createObjectURL(worstRecordRef.current[1]);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "pocusmate.webm";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    sendSessionDataToBackend();
   };
 
   // Promise 기반 저장 함수 (외부 호출용)
@@ -443,6 +462,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
           .then((stream) => {
             if (videoRef.current) {
               videoRef.current.srcObject = stream;
+              initMediaRecorder(stream);
             }
           })
           .catch((error) => console.error("Error accessing webcam:", error));
@@ -450,6 +470,13 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
     };
     setupFaceLandmarker();
     startCamera();
+
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+      stopRecordingInterval();
+    };
   }, []);
 
   useEffect(() => {
@@ -649,7 +676,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
             setFocalLength={setFocalLength}
             sessionActive={sessionActive}
             onStartSession={startSession}
-            onEndSession={sendSessionDataToBackend}
+            onEndSession={endSession}
           />
         </MainContentLayout>
       )}
