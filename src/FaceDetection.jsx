@@ -405,7 +405,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
         eyeClosedTime: window.eyeClosedTime || 0,
         isSleeping: window.isSleeping || false
       });
-    }, 100);
+    }, 75);
 
     return () => clearInterval(timer);
   }, []);
@@ -496,7 +496,7 @@ const FaceDetection = forwardRef(({ subject, displayMode = 'webcam', onSessionSt
         score,
         scoreLogger,
       );
-      setTimeout(() => requestAnimationFrame(detectFaces), 50);
+      setTimeout(() => requestAnimationFrame(detectFaces), 75);
     };
     requestAnimationFrame(detectFaces);
   }, [faceLandmarker, sessionActive]);
